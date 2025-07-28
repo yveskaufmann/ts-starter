@@ -1,10 +1,13 @@
 {
   "name": "@yveskaufmann/ts-starter",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Personal TypeScript project starter template",
   "main": "./index.js",
   "module": "./index.js",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "ts-starter": "./index.js"
   },
