@@ -30,6 +30,15 @@
       "env": {
         "NODE_ENV": "test"
       }
+    },
+    {
+      "name": "Attach to Running Application",
+      "port": 9992,
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
     }
   ]
 }
