@@ -25,7 +25,7 @@ export default function (plop) {
       // Process and render .hbs template files
       {
         type: 'addMany',
-        destination: './{{dashCase name}}',
+        destination: `${process.cwd()}/{{dashCase name}}`,
         base: 'templates/ts-app',
         templateFiles: 'templates/ts-app/**/*.hbs',
         globOptions: {
@@ -35,7 +35,7 @@ export default function (plop) {
       // Copy non-template files without processing
       {
         type: 'addMany',
-        destination: './{{dashCase name}}',
+        destination: `${process.cwd()}/{{dashCase name}}`,
         base: 'templates/ts-app',
         templateFiles: ['templates/ts-app/**/*', '!templates/ts-app/**/*.hbs'],
         globOptions: {
@@ -50,4 +50,4 @@ export default function (plop) {
       },
     ],
   });
-};
+}
