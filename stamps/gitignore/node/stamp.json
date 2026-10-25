@@ -1,0 +1,4 @@
+{
+  "description": ".gitignore for node projects",
+  "mode": "inject"
+}

@@ -1,0 +1,4 @@
+{
+  "description": "Vitest configuration",
+  "mode": "inject"
+}

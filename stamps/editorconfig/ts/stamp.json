@@ -1,0 +1,4 @@
+{
+  "description": "EditorConfig for TypeScript and JavaScript projects",
+  "mode": "inject"
+}
