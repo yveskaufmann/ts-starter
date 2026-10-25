@@ -27,6 +27,33 @@ jobs:
       - run: npm run format:check
       - run: npm test
 
+  package:
+    name: Published package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - name: Pack
+        run: npm pack --pack-destination "$RUNNER_TEMP"
+
+      - name: Install the package into an empty project and use it
+        working-directory: ${{ runner.temp }}
+        run: |
+          mkdir consumer && cd consumer
+          npm init -y
+          npm install ../yveskaufmann-ts-starter-*.tgz
+          npx ts-starter --version
+          npx ts-starter list
+          npx ts-starter create app:ts demo --set description="CI" --set author="CI <ci@example.com>"
+          test -f demo/package.json && test -f demo/.gitignore && test -f demo/.vscode/launch.json
+          bash -n <(npx ts-starter completion bash)
+
   generated-project:
     name: Generated project (node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
