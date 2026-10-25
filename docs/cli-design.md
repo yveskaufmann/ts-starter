@@ -119,10 +119,10 @@ stamps/
 - Today's `templates/ts-app` is split into stamps and becomes `app:ts`. `ts-starter` without arguments prints help.
 - The current positional-argument form (`ts-starter <name> <description> <author>`) used by CI moves to `create app:ts <name> --set ...`.
 
-## Open questions
+## Decisions
 
-1. Is `ts-starter create app:ts` allowed to also ask for the variant when omitted (`create app`)?
-2. Should stamps be able to declare a dependency on other stamps being present (e.g. `vitest` needs `package.json`)?
-3. Do stamps also edit existing files (add a script to `package.json`), or only write whole files?
-4. Where do user-defined stamps live: only in this package, or also `~/.config/ts-starter/stamps` / a project-local `.ts-starter/`?
-5. How are stamps versioned and re-applied (e.g. update an `.editorconfig` later)?
+1. **Omitted variant:** `create app` prompts for the variant. Without a terminal it fails and lists the variants.
+2. **Editing files:** the first version only writes whole files. Adding npm dependencies and altering existing files (for example merging into `package.json`) is a possible later extension.
+3. **Stamp source:** stamps ship only in this package. User or project stamp folders can be added later without breaking anything.
+4. **Re-applying:** running a stamp again uses the normal per-file conflict prompt. Applied stamps are not recorded in the project.
+5. **Old CLI form:** `ts-starter <name> <description> <author>` is dropped without an alias. `ts-starter` without arguments prints help, and the CI workflow and README move to `create app:ts <name> --set ...`.
