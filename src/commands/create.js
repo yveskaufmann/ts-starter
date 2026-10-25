@@ -1,0 +1,75 @@
+import path from 'node:path';
+
+import { UsageError } from '../errors.js';
+import { StampError, parseStampId, planWrites, prepareRun, resolveConflicts, writePlan } from '../stamps/index.js';
+
+const LABELS = { new: 'create', identical: 'unchanged', conflict: 'overwrite' };
+
+async function chooseVariant(registry, name, { interactive, ui }) {
+  const variants = registry.variants(name);
+  if (variants.length === 0) {
+    throw new StampError(`Unknown stamp "${name}". Available stamps: ${registry.names().join(', ') || 'none'}`);
+  }
+  if (!interactive) {
+    throw new StampError(
+      `Missing variant for "${name}", use ${variants.map((variant) => `${name}:${variant}`).join(' or ')}`,
+    );
+  }
+  return ui.askVariant(name, variants);
+}
+
+function printPlan(plan, stdout) {
+  for (const entry of plan) {
+    const label = entry.status === 'conflict' && entry.action === 'skip' ? 'keep' : LABELS[entry.status];
+    stdout.write(`  ${label.padEnd(9)} ${entry.path}\n`);
+  }
+}
+
+/**
+ * ts-starter create <stamp>[:<variant>] [target]
+ * @returns {Promise<number>} exit code
+ */
+export async function create({ positionals, options, registry, env }) {
+  const [spec, target] = positionals;
+  if (!spec) {
+    throw new UsageError('Missing stamp, for example: ts-starter create app:ts');
+  }
+
+  const { name, variant: given } = parseStampId(spec);
+  const variant = given ?? (await chooseVariant(registry, name, env));
+  const stamp = registry.get(name, variant);
+
+  const { plan, targetDir } = await prepareRun({
+    registry,
+    stamp,
+    target,
+    cwd: env.cwd,
+    set: options.set,
+    yes: options.yes,
+    ask: env.interactive ? (prompt) => env.ui.ask(prompt) : undefined,
+  });
+  const shown = path.relative(env.cwd, targetDir) || '.';
+
+  if (options.dryRun) {
+    env.stdout.write(`Dry run, nothing is written. ${stamp.id} would change ${shown}:\n`);
+    printPlan(plan, env.stdout);
+    return 0;
+  }
+
+  const resolved = await resolveConflicts(plan, {
+    strategy: options.force ? 'force' : options.skipExisting ? 'skip' : undefined,
+    ask: env.interactive ? (entry) => env.ui.askConflict(entry) : undefined,
+  });
+  const { written, skipped } = await writePlan(resolved, targetDir);
+
+  env.stdout.write(`${stamp.id}: wrote ${written.length} file${written.length === 1 ? '' : 's'} to ${shown}\n`);
+  printPlan(resolved, env.stdout);
+  if (skipped.length > 0) {
+    const kept = resolved.filter((entry) => entry.action === 'skip' && entry.status === 'conflict').length;
+    env.stdout.write(`${skipped.length} skipped${kept > 0 ? `, ${kept} kept with their own content` : ''}\n`);
+  }
+  if (stamp.mode === 'project' && shown !== '.') {
+    env.stdout.write(`\nNext: cd ${shown}\n`);
+  }
+  return 0;
+}
