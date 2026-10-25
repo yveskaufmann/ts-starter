@@ -12,6 +12,8 @@
     "ts-starter": "./index.js"
   },
   "dependencies": {
+    "change-case": "^5.4.4",
+    "handlebars": "^4.7.10",
     "plop": "^4.0.5"
   },
   "files": [
@@ -20,7 +22,9 @@
     "plopfile.js"
   ],
   "devDependencies": {
-    "semantic-release": "^25.0.9"
+    "prettier": "^3.9.10",
+    "semantic-release": "^25.0.9",
+    "vitest": "^5.0.5"
   },
   "keywords": [
     "plop",
@@ -38,6 +42,11 @@
   "homepage": "https://github.com/yveskaufmann/ts-starter",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "format:check": "prettier --check src vitest.config.js",
+    "format": "prettier --write src vitest.config.js"
   }
 }
