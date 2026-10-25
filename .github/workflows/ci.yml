@@ -1,0 +1,46 @@
+name: CI - Workflow
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  generated-project:
+    name: Generated project (node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install generator dependencies
+        run: npm ci
+
+      - name: Generate test project
+        working-directory: ${{ runner.temp }}
+        run: node "$GITHUB_WORKSPACE/index.js" test-project "CI test project" "CI <ci@example.com>"
+
+      - name: Install project dependencies
+        working-directory: ${{ runner.temp }}/test-project
+        run: npm install
+
+      - name: Check formatting
+        working-directory: ${{ runner.temp }}/test-project
+        run: npx prettier --check .
+
+      - name: Build
+        working-directory: ${{ runner.temp }}/test-project
+        run: npm run build
+
+      - name: Test
+        working-directory: ${{ runner.temp }}/test-project
+        run: npm test
