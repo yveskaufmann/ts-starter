@@ -167,15 +167,21 @@ describe('create', () => {
     expect(result.stdout).toContain('create    .editorconfig');
   });
 
-  it('does not write anything with --dry-run and shows conflicts', async () => {
+  it('does not write anything with --dry-run and reports conflicts according to the flags', async () => {
     const base = await setup();
     await writeTree(base.cwd, { '.editorconfig': 'custom\n' });
 
-    const result = await run(['create', 'editorconfig:ts', '--dry-run'], base);
+    const plain = await run(['create', 'editorconfig:ts', '--dry-run'], base);
+    expect(plain.code).toBe(EXIT.ok);
+    expect(plain.stdout).toContain('Dry run');
+    expect(plain.stdout).toContain('conflict  .editorconfig');
 
-    expect(result.code).toBe(EXIT.ok);
-    expect(result.stdout).toContain('Dry run');
-    expect(result.stdout).toContain('overwrite .editorconfig');
+    expect((await run(['create', 'editorconfig:ts', '--dry-run', '--force'], base)).stdout).toContain(
+      'overwrite .editorconfig',
+    );
+    expect((await run(['create', 'editorconfig:ts', '--dry-run', '--skip-existing'], base)).stdout).toContain(
+      'keep      .editorconfig',
+    );
     expect(await readFile(path.join(base.cwd, '.editorconfig'), 'utf8')).toBe('custom\n');
   });
 
