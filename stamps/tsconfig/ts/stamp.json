@@ -1,0 +1,4 @@
+{
+  "description": "TypeScript configuration for node (nodenext)",
+  "mode": "inject"
+}
