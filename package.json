@@ -12,7 +12,9 @@
     "ts-starter": "./index.js"
   },
   "dependencies": {
+    "@inquirer/prompts": "^8.7.4",
     "change-case": "^5.4.4",
+    "diff": "^9.0.0",
     "handlebars": "^4.7.10",
     "plop": "^4.0.5"
   },
