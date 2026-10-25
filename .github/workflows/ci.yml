@@ -23,6 +23,7 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - run: sudo apt-get install -y zsh # to test the zsh completion
       - run: npm run format:check
       - run: npm test
 
