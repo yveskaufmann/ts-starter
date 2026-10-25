@@ -12,13 +12,17 @@
     "ts-starter": "./index.js"
   },
   "dependencies": {
-    "plop": "^4.0.1"
+    "plop": "^4.0.5"
   },
-  "files": ["templates", "index.js", "plopfile.js"],
+  "files": [
+    "templates",
+    "index.js",
+    "plopfile.js"
+  ],
   "devDependencies": {
-    "semantic-release": "^23.0.7"
+    "semantic-release": "^25.0.9"
   },
-   "keywords": [
+  "keywords": [
     "plop",
     "template",
     "typescript"
@@ -36,5 +40,4 @@
   "engines": {
     "node": ">=18"
   }
-
 }
