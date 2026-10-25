@@ -125,6 +125,11 @@ build/
 ",
   "Makefile": "SHELL=/bin/bash
 
+.DEFAULT_GOAL := build
+
+# Default arguments for the Makefile targets e.g make build ARGS="--flag"
+ARGS ?=
+
 
 ########################################################################################################################
 #
@@ -134,6 +139,9 @@ build/
 .PHONY: build
 build: node_modules 					## Build the project
 	npx tsc
+
+package-lock.json:           ## Initialize the package lock file if it doesn't exist
+	npm install
 
 node_modules: package.json package-lock.json
 ifeq ($(CI), true)
@@ -145,20 +153,21 @@ endif
 .PHONY: setup
 setup: clean 										## Setup the project environment
 	npm install
-	$(MAKE) -f $(MAKEFILE) build
+	$(MAKE) build
 
 .PHONY: clean
 clean:													## Clean up the build artifacts
 	rm -rf dist
 
-.PHONY: start
+.PHONY: start run
+run: start
 start: 													## Start the application in development mode
 	npx tsx --watch \\
-		--inspect=9992 src/index.ts
+		--inspect=9992 src/index.ts $(ARGS)
 
 .PHONY: test
 test: 													## Run the tests
-	npx vitest run
+	npx vitest run $(ARGS)
 
 .PHONY: help
 help: 													## Render the possible targets in this Makefile along with their descriptions
