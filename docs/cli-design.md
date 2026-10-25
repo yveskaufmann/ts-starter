@@ -39,6 +39,7 @@ ts-starter create editorconfig:go
 ```
 ts-starter list [stamp]      # list stamps and their variants (`--json` for scripts)
 ts-starter info <stamp>:<v>  # description, prompts, included stamps, files written
+ts-starter completion <shell> # print the tab completion script for bash or zsh
 ```
 
 ### Options
@@ -50,6 +51,35 @@ ts-starter info <stamp>:<v>  # description, prompts, included stamps, files writ
 | `--dry-run`       | Print the files that would be written and which ones conflict        |
 | `--yes`           | Accept defaults for every prompt that has one (for CI and scripts)   |
 | `--set key=value` | Answer a prompt non-interactively, e.g. `--set description="My app"` |
+
+## Tab completion
+
+`ts-starter completion bash|zsh` prints a completion script. Other shells fail with a list of the supported ones.
+
+```bash
+# bash: add to ~/.bashrc
+source <(ts-starter completion bash)
+
+# zsh: add to ~/.zshrc
+source <(ts-starter completion zsh)
+```
+
+What is completed:
+
+| Position                               | Suggestions                                      |
+| -------------------------------------- | ------------------------------------------------ |
+| `ts-starter <TAB>`                     | commands: `create`, `list`, `info`, `completion` |
+| `ts-starter create <TAB>`              | stamp names, e.g. `app`, `editorconfig`          |
+| `ts-starter create editorconfig:<TAB>` | variants of that stamp, e.g. `ts`, `go`          |
+| `ts-starter create app:ts <TAB>`       | directories (shell default)                      |
+| `ts-starter create --<TAB>`            | options of the command                           |
+| `ts-starter info <TAB>`                | `<stamp>:<variant>` pairs                        |
+| `ts-starter list <TAB>`                | stamp names                                      |
+| `ts-starter completion <TAB>`          | `bash`, `zsh`                                    |
+
+The script is static and small. For every suggestion it calls a hidden command, `ts-starter __complete <words...>`, which prints
+one suggestion per line from the built-in stamps. New stamps and variants therefore show up without regenerating the script.
+`__complete` must be fast (no prompts, no network) and never fail loudly; on any error it prints nothing.
 
 ## Target rules
 
@@ -126,3 +156,4 @@ stamps/
 3. **Stamp source:** stamps ship only in this package. User or project stamp folders can be added later without breaking anything.
 4. **Re-applying:** running a stamp again uses the normal per-file conflict prompt. Applied stamps are not recorded in the project.
 5. **Old CLI form:** `ts-starter <name> <description> <author>` is dropped without an alias. `ts-starter` without arguments prints help, and the CI workflow and README move to `create app:ts <name> --set ...`.
+6. **Shells:** `completion` supports bash and zsh only. Other shells can be added later without changing the design.
