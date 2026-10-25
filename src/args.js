@@ -2,7 +2,7 @@ import { parseArgs } from 'node:util';
 
 import { UsageError } from './errors.js';
 
-export const COMMANDS = ['create', 'list', 'info'];
+export const COMMANDS = ['create', 'list', 'info', 'completion'];
 
 const options = {
   'force': { type: 'boolean' },
@@ -20,9 +20,10 @@ const COMMAND_OPTIONS = {
   create: ['force', 'skip-existing', 'dry-run', 'yes', 'set'],
   list: ['json'],
   info: [],
+  completion: [],
 };
 
-const MAX_POSITIONALS = { create: 2, list: 1, info: 1 };
+const MAX_POSITIONALS = { create: 2, list: 1, info: 1, completion: 1 };
 
 function parseSet(values = []) {
   const set = {};
