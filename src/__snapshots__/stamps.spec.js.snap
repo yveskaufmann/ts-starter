@@ -1,0 +1,266 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shipped stamps > renders the app:ts project 1`] = `
+{
+  ".editorconfig": "# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.{js,json,ts}]
+trim_trailing_whitespace = true
+tab_width = 2
+indent_size = 2
+indent_style = space
+
+[{Makefile,*.mk}]
+trim_trailing_whitespace = true
+tab_width = 2
+indent_size = 2
+indent_style = tab
+
+",
+  ".gitignore": "#
+# These files are developer specific and can be used to override default settings
+#
+docker-compose.override.yaml
+docker-compose.override.yml
+
+
+# Exclude .env files as these can contain sensitive information
+.env
+.env.local
+.env.development
+.env/dev
+
+# Ide files
+#
+.idea
+.vscode/tags
+.vscode/chrome
+
+#
+# OS Specific files
+#
+.DS_Store
+
+#
+# NPM stuff
+#
+node_modules
+
+#
+# Log files
+#
+*.log
+.logs
+logs
+
+#
+# Build / Generated Directories
+#
+dist
+build/
+",
+  ".nvmrc": "lts/krypton
+",
+  ".prettierrc.json": "{
+  "printWidth": 120,
+  "singleQuote": true,
+  "proseWrap": "always",
+  "quoteProps": "consistent"
+}
+",
+  ".vscode/launch.json": "{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Application",
+      "runtimeExecutable": "tsx",
+      "program": "\${workspaceFolder}/src/index.ts",
+      "cwd": "\${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Current Spec File",
+      "program": "\${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "\${relativeFile}"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "cwd": "\${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "test"
+      }
+    },
+    {
+      "name": "Attach to Running Application",
+      "port": 9992,
+      "request": "attach",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    }
+  ]
+}
+",
+  ".vscode/settings.json": "{
+  "typescript.preferences.importModuleSpecifier": "project-relative",
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "javascript.preferences.importModuleSpecifier": "project-relative",
+  "javascript.preferences.importModuleSpecifierEnding": "js"
+}
+",
+  "Makefile": "SHELL=/bin/bash
+
+
+########################################################################################################################
+#
+# Project dev targets
+#
+########################################################################################################################
+.PHONY: build
+build: node_modules 					## Build the project
+	npx tsc
+
+node_modules: package.json package-lock.json
+ifeq ($(CI), true)
+	npm ci
+else
+	npm install
+endif
+
+.PHONY: setup
+setup: clean 										## Setup the project environment
+	npm install
+	$(MAKE) -f $(MAKEFILE) build
+
+.PHONY: clean
+clean:													## Clean up the build artifacts
+	rm -rf dist
+
+.PHONY: start
+start: 													## Start the application in development mode
+	npx tsx --watch \\
+		--inspect=9992 src/index.ts
+
+.PHONY: test
+test: 													## Run the tests
+	npx vitest run
+
+.PHONY: help
+help: 													## Render the possible targets in this Makefile along with their descriptions
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) |  awk 'BEGIN {FS = ":.*?## "}; {printf "\\033[36m%-30s\\033[0m %s\\n", $$1, $$2}'cat
+",
+  "README.md": "# Demo App
+
+A demo & more
+
+## Installation
+",
+  "package.json": "{
+  "name": "demo-app",
+  "description": "A demo & more",
+  "author": "Me <me@example.org>",
+  "private": true,
+  "type": "module",
+  "module": "dist/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "make",
+    "clean": "make clean",
+    "start": "make start",
+    "test": "make test"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
+",
+  "src/index.ts": "console.info('Hello, world! This is a message from the print function.');
+",
+  "src/sum.spec.ts": "import { describe, expect, it } from 'vitest';
+import { sum } from './sum.js';
+
+describe('Sum', () => {
+  it('should return the sum of two numbers', () => {
+    expect(sum(1, 2)).toBe(3);
+    expect(sum(-1, 1)).toBe(0);
+    expect(sum(0, 0)).toBe(0);
+    expect(sum(-5, -5)).toBe(-10);
+  });
+});
+",
+  "src/sum.ts": "/**
+ * Export a function that sums two numbers.
+ * @param a - The first number to sum.
+ * @param b - The second number to sum.
+ * @returns The sum of the two numbers.
+ */
+export function sum(a: number, b: number): number {
+  return a + b;
+}
+",
+  "tsconfig.json": "{
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    // Target & language configuration Specify ECMAScript target version.
+    "target": "es2020",
+    "lib": ["ES2024"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    // Module configuration
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "isolatedModules": true,
+    // Type declarations to include, TypeScript >= 6 no longer includes all @types packages by default
+    "types": ["node"],
+    // Input and output directories
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility.
+    "esModuleInterop": true,
+    // Ensure that casing is correct in imports.
+    "forceConsistentCasingInFileNames": true,
+    // Enable all strict type-checking options.
+    "strict": true,
+    "strictNullChecks": false,
+    "skipLibCheck": true,
+    // Emit source maps for debugging
+    "sourceMap": true,
+    "inlineSources": true
+  }
+}
+",
+  "vitest.config.ts": "import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['src/**/*.spec.ts'],
+    exclude: ['dist/**', 'node_modules/**'],
+  },
+});
+",
+}
+`;
