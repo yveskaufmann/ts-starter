@@ -242,6 +242,41 @@ describe('list', () => {
   });
 });
 
+describe('completion', () => {
+  it('prints the script of a supported shell', async () => {
+    for (const shell of ['bash', 'zsh']) {
+      const expected = await readFile(new URL(`./completion/${shell}.sh`, import.meta.url), 'utf8');
+      expect(await run(['completion', shell])).toMatchObject({ code: EXIT.ok, stdout: expected });
+    }
+  });
+
+  it('does not need the stamps', async () => {
+    expect((await run(['completion', 'bash'], { stampsDir: '/does/not/exist' })).code).toBe(EXIT.ok);
+  });
+
+  it('rejects a missing or unsupported shell', async () => {
+    expect(await run(['completion'])).toMatchObject({ code: EXIT.usage });
+    const fish = await run(['completion', 'fish']);
+    expect(fish.code).toBe(EXIT.usage);
+    expect(fish.stderr).toContain('Unsupported shell "fish", use one of: bash, zsh');
+  });
+});
+
+describe('__complete', () => {
+  it('prints suggestions even for words that look like options', async () => {
+    expect((await run(['__complete', 'create', 'editorconfig:'])).stdout).toBe('editorconfig:go\neditorconfig:ts\n');
+    expect((await run(['__complete', 'create', 'app:ts', '--'])).stdout).toContain('--dry-run\n');
+  });
+
+  it('never fails and prints nothing when the stamps cannot be loaded', async () => {
+    expect(await run(['__complete', 'create', ''], { stampsDir: '/does/not/exist' })).toMatchObject({
+      code: EXIT.ok,
+      stdout: '',
+      stderr: '',
+    });
+  });
+});
+
 describe('info', () => {
   it('shows values, includes and files', async () => {
     const { code, stdout } = await run(['info', 'app:ts']);
