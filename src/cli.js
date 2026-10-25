@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseArguments } from './args.js';
+import { complete } from './commands/complete.js';
+import { completion } from './commands/completion.js';
 import { create } from './commands/create.js';
 import { info } from './commands/info.js';
 import { list } from './commands/list.js';
@@ -14,7 +16,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 export const EXIT = { ok: 0, failure: 1, usage: 2, interrupted: 130 };
 
-const HANDLERS = { create, list, info };
+const HANDLERS = { create, list, info, completion };
 
 export const USAGE = `Usage: ts-starter <command> [options]
 
@@ -22,6 +24,7 @@ Commands:
   create <stamp>[:<variant>] [target]   Create a project or add a stamp to a directory
   list [stamp]                          List the available stamps and variants
   info <stamp>:<variant>                Show what a stamp asks for and writes
+  completion <bash|zsh>                 Print the tab completion script of a shell
 
 Options of create:
   --set key=value     Answer a prompt without asking, can be repeated
@@ -73,6 +76,11 @@ export async function main(argv, env = {}) {
   };
   full.ui ??= createTerminalUi();
 
+  // Hidden command of the completion scripts, its words look like options and must not be parsed
+  if (argv[0] === '__complete') {
+    return complete(argv.slice(1), full);
+  }
+
   try {
     const parsed = parseArguments(argv);
 
@@ -85,7 +93,7 @@ export async function main(argv, env = {}) {
       return parsed.help ? EXIT.ok : EXIT.usage;
     }
 
-    const registry = await loadRegistry(full.stampsDir);
+    const registry = parsed.command === 'completion' ? undefined : await loadRegistry(full.stampsDir);
     return await HANDLERS[parsed.command]({
       positionals: parsed.positionals,
       options: parsed.options,
