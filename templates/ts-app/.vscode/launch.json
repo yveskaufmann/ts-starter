@@ -17,14 +17,11 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Current Spec File",
-      "runtimeExecutable": "tsx",
-      "runtimeArgs": [
-        "--experimental-vm-modules",
-      ],
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
-      "args": [
-        "${file}"
-      ],
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "env": {
@@ -35,9 +32,7 @@
       "name": "Attach to Running Application",
       "port": 9992,
       "request": "attach",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "type": "node"
     }
   ]

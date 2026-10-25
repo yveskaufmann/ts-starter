@@ -33,7 +33,7 @@ start: 													## Start the application in development mode
 
 .PHONY: test
 test: 													## Run the tests
-	node --experimental-vm-modules ./node_modules/.bin/jest
+	npx vitest run
 
 .PHONY: help
 help: 													## Render the possible targets in this Makefile along with their descriptions
