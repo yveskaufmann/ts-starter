@@ -66,20 +66,29 @@ source <(ts-starter completion zsh)
 
 What is completed:
 
-| Position                               | Suggestions                                      |
-| -------------------------------------- | ------------------------------------------------ |
-| `ts-starter <TAB>`                     | commands: `create`, `list`, `info`, `completion` |
-| `ts-starter create <TAB>`              | stamp names, e.g. `app`, `editorconfig`          |
-| `ts-starter create editorconfig:<TAB>` | variants of that stamp, e.g. `ts`, `go`          |
-| `ts-starter create app:ts <TAB>`       | directories (shell default)                      |
-| `ts-starter create --<TAB>`            | options of the command                           |
-| `ts-starter info <TAB>`                | `<stamp>:<variant>` pairs                        |
-| `ts-starter list <TAB>`                | stamp names                                      |
-| `ts-starter completion <TAB>`          | `bash`, `zsh`                                    |
+| Position                                | Suggestions                                                          |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| `ts-starter <TAB>`                      | commands: `create`, `list`, `info`, `completion`                     |
+| `ts-starter create <TAB>`               | stamps with their variants: `app:ts`, `editorconfig:go`, ...         |
+| `ts-starter create editorconfig:<TAB>`  | the variants of that stamp, e.g. `go` and `ts`                       |
+| `ts-starter create app:ts <TAB>`        | directories                                                          |
+| `ts-starter create app:ts --set <TAB>`  | `key=` for every value the stamp and its includes ask for            |
+| `ts-starter create --<TAB>`             | options of the command, flags that are already used are left out     |
+| `ts-starter info <TAB>`                 | `<stamp>:<variant>` pairs                                            |
+| `ts-starter list <TAB>`                 | stamp names                                                          |
+| `ts-starter completion <TAB>`           | `bash`, `zsh`                                                        |
 
-The script is static and small. For every suggestion it calls a hidden command, `ts-starter __complete <words...>`, which prints
-one suggestion per line from the built-in stamps. New stamps and variants therefore show up without regenerating the script.
-`__complete` must be fast (no prompts, no network) and never fail loudly; on any error it prints nothing.
+Suggestions are complete `<stamp>:<variant>` ids instead of only stamp names, so `create ed<TAB>` completes up to `editorconfig:`
+and a second TAB lists the variants, without typing the colon first.
+
+The scripts are static and small. For every suggestion they call a hidden command, `ts-starter __complete <words...>`, with the
+words typed after `ts-starter`, the last one being the word under the cursor. It prints the matching suggestions, one per line,
+from the built-in stamps. New stamps and variants therefore show up without regenerating the script. A final `:files` line
+asks the shell to complete directories as well. `__complete` is fast (no prompts, no network) and never fails: on any error it
+prints nothing and exits with 0.
+
+bash splits words at `:`, so the bash script splits the line itself and removes the part up to the last colon from the
+suggestions, as readline only replaces the text after it. zsh needs no workaround.
 
 ## Target rules
 
