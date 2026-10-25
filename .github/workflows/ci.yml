@@ -46,7 +46,9 @@ jobs:
 
       - name: Generate test project
         working-directory: ${{ runner.temp }}
-        run: node "$GITHUB_WORKSPACE/index.js" test-project "CI test project" "CI <ci@example.com>"
+        run: |
+          node "$GITHUB_WORKSPACE/index.js" create app:ts test-project \
+            --set description="CI test project" --set author="CI <ci@example.com>"
 
       - name: Install project dependencies
         working-directory: ${{ runner.temp }}/test-project

@@ -1,7 +1,7 @@
 {
   "name": "@yveskaufmann/ts-starter",
   "version": "0.0.1",
-  "description": "Personal TypeScript project starter template",
+  "description": "Personal project starter: create apps and add small stamps like an editorconfig",
   "main": "./index.js",
   "module": "./index.js",
   "type": "module",
@@ -15,13 +15,14 @@
     "@inquirer/prompts": "^8.7.4",
     "change-case": "^5.4.4",
     "diff": "^9.0.0",
-    "handlebars": "^4.7.10",
-    "plop": "^4.0.5"
+    "handlebars": "^4.7.10"
   },
   "files": [
-    "templates",
+    "stamps",
+    "src",
     "index.js",
-    "plopfile.js"
+    "!src/**/*.spec.js",
+    "!src/**/test-helpers.js"
   ],
   "devDependencies": {
     "prettier": "^3.9.10",
@@ -29,7 +30,9 @@
     "vitest": "^5.0.5"
   },
   "keywords": [
-    "plop",
+    "starter",
+    "scaffold",
+    "stamp",
     "template",
     "typescript"
   ],
