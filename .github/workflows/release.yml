@@ -1,4 +1,4 @@
-# This workflow will create a new release 
+# This workflow will create a new release
 
 name: Release - Workflow
 
@@ -19,10 +19,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/jod'
+          node-version: "lts/jod"
           cache: "npm"
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures
       - name: Release
         run: npx semantic-release
         env:
-          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
