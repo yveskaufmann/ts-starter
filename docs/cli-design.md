@@ -14,7 +14,7 @@ ts-starter create <stamp>[:<variant>] [target] [options]
 | Part        | Meaning                                                                          |
 | ----------- | -------------------------------------------------------------------------------- |
 | `<stamp>`   | Name of the stamp, e.g. `app`, `editorconfig`, `prettier`                        |
-| `<variant>` | Flavour of the stamp, e.g. `ts`, `go`. Omitted: the stamp's default, or a prompt |
+| `<variant>` | Flavour of the stamp, e.g. `ts`, `go`. Omitted: a prompt, or an error without a terminal |
 | `[target]`  | Directory to write into. See [Target rules](#target-rules)                       |
 
 ### Examples
