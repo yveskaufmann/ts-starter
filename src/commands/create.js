@@ -3,7 +3,7 @@ import path from 'node:path';
 import { UsageError } from '../errors.js';
 import { StampError, parseStampId, planWrites, prepareRun, resolveConflicts, writePlan } from '../stamps/index.js';
 
-const LABELS = { new: 'create', identical: 'unchanged', conflict: 'overwrite' };
+const LABELS = { new: 'create', identical: 'unchanged' };
 
 async function chooseVariant(registry, name, { interactive, ui }) {
   const variants = registry.variants(name);
@@ -18,9 +18,13 @@ async function chooseVariant(registry, name, { interactive, ui }) {
   return ui.askVariant(name, variants);
 }
 
-function printPlan(plan, stdout) {
+/** @param {boolean} resolved whether the conflicts were decided, otherwise they are only reported */
+function printPlan(plan, stdout, resolved) {
   for (const entry of plan) {
-    const label = entry.status === 'conflict' && entry.action === 'skip' ? 'keep' : LABELS[entry.status];
+    let label = LABELS[entry.status];
+    if (entry.status === 'conflict') {
+      label = !resolved ? 'conflict' : entry.action === 'skip' ? 'keep' : 'overwrite';
+    }
     stdout.write(`  ${label.padEnd(9)} ${entry.path}\n`);
   }
 }
@@ -50,20 +54,22 @@ export async function create({ positionals, options, registry, env }) {
   });
   const shown = path.relative(env.cwd, targetDir) || '.';
 
+  const strategy = options.force ? 'force' : options.skipExisting ? 'skip' : undefined;
+
   if (options.dryRun) {
     env.stdout.write(`Dry run, nothing is written. ${stamp.id} would change ${shown}:\n`);
-    printPlan(plan, env.stdout);
+    printPlan(strategy ? await resolveConflicts(plan, { strategy }) : plan, env.stdout, Boolean(strategy));
     return 0;
   }
 
   const resolved = await resolveConflicts(plan, {
-    strategy: options.force ? 'force' : options.skipExisting ? 'skip' : undefined,
+    strategy,
     ask: env.interactive ? (entry) => env.ui.askConflict(entry) : undefined,
   });
   const { written, skipped } = await writePlan(resolved, targetDir);
 
   env.stdout.write(`${stamp.id}: wrote ${written.length} file${written.length === 1 ? '' : 's'} to ${shown}\n`);
-  printPlan(resolved, env.stdout);
+  printPlan(resolved, env.stdout, true);
   if (skipped.length > 0) {
     const kept = resolved.filter((entry) => entry.action === 'skip' && entry.status === 'conflict').length;
     env.stdout.write(`${skipped.length} skipped${kept > 0 ? `, ${kept} kept with their own content` : ''}\n`);
