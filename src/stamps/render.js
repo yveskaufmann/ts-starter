@@ -108,3 +108,19 @@ export async function renderStamps(stamps, answers) {
   }
   return [...files.values()].sort((a, b) => a.path.localeCompare(b.path));
 }
+
+/**
+ * Paths a stamp writes, without rendering anything: `.hbs` files lose their extension.
+ * @returns {Promise<string[]>}
+ */
+export async function listStampFiles(stamp) {
+  if (!(await exists(stamp.filesDir))) {
+    return [];
+  }
+  const files = [];
+  for await (const file of walk(stamp.filesDir)) {
+    const relative = path.relative(stamp.filesDir, file).split(path.sep).join('/');
+    files.push(relative.endsWith(TEMPLATE_EXTENSION) ? relative.slice(0, -TEMPLATE_EXTENSION.length) : relative);
+  }
+  return files;
+}
