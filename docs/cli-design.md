@@ -90,7 +90,7 @@ A stamp declares whether it creates a project or modifies one (`"mode": "project
 | `project` | prompt for the name, create `./<dash-case name>` | create `./<dash-case name>` | use the cwd, name = folder name |
 | `inject`  | cwd                                              | `./<name>` (must exist)     | cwd                             |
 
-A `project` stamp refuses a non-empty directory unless `--force` or the conflict prompt is used.
+Files that already exist in the target directory are handled by the conflict rules below; other files in it are left alone.
 
 ## Conflicts
 
