@@ -1,0 +1,28 @@
+{
+  "description": "TypeScript application with vitest, prettier and tsx",
+  "mode": "project",
+  "prompts": [
+    {
+      "name": "name",
+      "message": "What is the project name?"
+    },
+    {
+      "name": "description",
+      "message": "Project description:",
+      "default": "A TypeScript project"
+    },
+    {
+      "name": "author",
+      "message": "Author name:",
+      "default": "Yves Kaufmann <yv35kaufmann@gmail.com>"
+    }
+  ],
+  "includes": [
+    "editorconfig:ts",
+    "prettier:ts",
+    "tsconfig:ts",
+    "vitest:ts",
+    "vscode:ts",
+    "gitignore:node"
+  ]
+}

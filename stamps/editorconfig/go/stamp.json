@@ -1,0 +1,4 @@
+{
+  "description": "EditorConfig for Go projects (gofmt style, tabs)",
+  "mode": "inject"
+}
