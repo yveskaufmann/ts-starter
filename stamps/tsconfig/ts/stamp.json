@@ -1,5 +1,0 @@
-{
-  "$schema": "../../../stamp.schema.json",
-  "description": "TypeScript configuration for node (nodenext)",
-  "mode": "inject"
-}

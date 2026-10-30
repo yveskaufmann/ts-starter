@@ -25,9 +25,7 @@ describe('shipped stamps', () => {
       'editorconfig:go',
       'editorconfig:ts',
       'gitignore:node',
-      'tsconfig:ts',
       'vitest:ts',
-      'vscode:ts',
     ]);
   });
 
@@ -54,15 +52,7 @@ describe('shipped stamps', () => {
   it('composes app:ts from the small stamps', () => {
     const order = registry.flatten(registry.get('app', 'ts')).map((stamp) => stamp.id);
 
-    expect(order).toEqual([
-      'editorconfig:ts',
-      'tsconfig:ts',
-      'vitest:ts',
-      'vscode:ts',
-      'biome:ts',
-      'gitignore:node',
-      'app:ts',
-    ]);
+    expect(order).toEqual(['editorconfig:ts', 'vitest:ts', 'biome:ts', 'gitignore:node', 'app:ts']);
   });
 
   it('renders the app:ts project', async () => {

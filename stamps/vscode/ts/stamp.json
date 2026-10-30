@@ -1,5 +1,0 @@
-{
-  "$schema": "../../../stamp.schema.json",
-  "description": "VS Code settings and launch configurations for a TypeScript project",
-  "mode": "inject"
-}

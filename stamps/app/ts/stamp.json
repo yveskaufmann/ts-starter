@@ -18,5 +18,5 @@
       "default": "Yves Kaufmann <yv35kaufmann@gmail.com>"
     }
   ],
-  "includes": ["editorconfig:ts", "tsconfig:ts", "vitest:ts", "vscode:ts", "biome:ts", "gitignore:node"]
+  "includes": ["editorconfig:ts", "vitest:ts", "biome:ts", "gitignore:node"]
 }

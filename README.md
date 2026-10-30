@@ -170,13 +170,11 @@ ts-starter list
 
 | Stamp             | Mode      | Writes                                                                                             |
 | ----------------- | --------- | -------------------------------------------------------------------------------------------------- |
-| `app:ts`          | `project` | A TypeScript app: `package.json`, `README.md`, `Makefile`, `.nvmrc`, `src/`, plus the stamps below |
+| `app:ts`          | `project` | A TypeScript app: `package.json`, `README.md`, `Makefile`, `.nvmrc`, `tsconfig.json`, `.vscode/`, `src/`, plus the stamps below |
 | `editorconfig:ts` | `inject`  | `.editorconfig` for TypeScript and JavaScript                                                      |
 | `editorconfig:go` | `inject`  | `.editorconfig` for Go (tabs)                                                                      |
 | `biome:ts`        | `inject`  | `biome.json`, the `@biomejs/biome` dependency and the Biome settings in `.vscode/`                 |
-| `tsconfig:ts`     | `inject`  | `tsconfig.json` for node                                                                           |
 | `vitest:ts`       | `inject`  | `vitest.config.ts`                                                                                 |
-| `vscode:ts`       | `inject`  | `.vscode/settings.json` (import settings) and `.vscode/launch.json`                                |
 | `gitignore:node`  | `inject`  | `.gitignore`                                                                                       |
 
 `ts-starter info app:ts` shows the values a stamp asks for, the stamps it includes and the files it writes.
