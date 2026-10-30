@@ -1,9 +1,9 @@
 import path from 'node:path';
 
 import { UsageError } from '../errors.js';
-import { StampError, parseStampId, planWrites, prepareRun, resolveConflicts, writePlan } from '../stamps/index.js';
+import { parseStampId, prepareRun, resolveConflicts, StampError, writePlan } from '../stamps/index.js';
 
-const LABELS = { new: 'create', identical: 'unchanged' };
+const LABELS = { new: 'create', identical: 'unchanged', patched: 'patch' };
 
 async function chooseVariant(registry, name, { interactive, ui }) {
   const variants = registry.variants(name);
@@ -29,6 +29,12 @@ function printPlan(plan, stdout, resolved) {
   }
 }
 
+function printHints(hints, stdout) {
+  for (const hint of hints) {
+    stdout.write(`hint: ${hint}\n`);
+  }
+}
+
 /**
  * ts-starter create <stamp>[:<variant>] [target]
  * @returns {Promise<number>} exit code
@@ -43,7 +49,7 @@ export async function create({ positionals, options, registry, env }) {
   const variant = given ?? (await chooseVariant(registry, name, env));
   const stamp = registry.get(name, variant);
 
-  const { plan, targetDir } = await prepareRun({
+  const { plan, targetDir, hints } = await prepareRun({
     registry,
     stamp,
     target,
@@ -59,6 +65,7 @@ export async function create({ positionals, options, registry, env }) {
   if (options.dryRun) {
     env.stdout.write(`Dry run, nothing is written. ${stamp.id} would change ${shown}:\n`);
     printPlan(strategy ? await resolveConflicts(plan, { strategy }) : plan, env.stdout, Boolean(strategy));
+    printHints(hints, env.stdout);
     return 0;
   }
 
@@ -74,6 +81,7 @@ export async function create({ positionals, options, registry, env }) {
     const kept = resolved.filter((entry) => entry.action === 'skip' && entry.status === 'conflict').length;
     env.stdout.write(`${skipped.length} skipped${kept > 0 ? `, ${kept} kept with their own content` : ''}\n`);
   }
+  printHints(hints, env.stdout);
   if (stamp.mode === 'project' && shown !== '.') {
     env.stdout.write(`\nNext: cd ${shown}\n`);
   }

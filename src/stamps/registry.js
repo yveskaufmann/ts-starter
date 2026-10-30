@@ -4,6 +4,7 @@ import path from 'node:path';
 import { StampError } from './errors.js';
 
 const MODES = ['project', 'inject'];
+const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies'];
 const PROMPT_TYPES = ['input', 'confirm'];
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -16,6 +17,12 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
  */
 
 /**
+ * @typedef {object} Patch
+ * @property {string} file Relative path of a JSON file in the target
+ * @property {Record<string, unknown>} merge Values merged into the file
+ */
+
+/**
  * @typedef {object} Stamp
  * @property {string} name
  * @property {string} variant
@@ -24,6 +31,9 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
  * @property {'project' | 'inject'} mode
  * @property {Prompt[]} prompts
  * @property {string[]} includes
+ * @property {{ dependencies?: Record<string, string>, devDependencies?: Record<string, string> }} npm
+ *   npm packages the stamp needs in package.json
+ * @property {Patch[]} patches
  * @property {string} dir Directory of the stamp.json
  * @property {string} filesDir Directory holding the files of the stamp
  * @property {boolean} filesDeclared True when stamp.json names the files directory
@@ -75,6 +85,47 @@ function validatePrompt(prompt, index, id) {
   return { name, message, type, ...(prompt.default !== undefined && { default: prompt.default }) };
 }
 
+function isOutside(file) {
+  return path.isAbsolute(file) || path.normalize(file).split(path.sep).includes('..');
+}
+
+function validateNpm(npm, id) {
+  if (!isObject(npm)) {
+    throw new StampError(`Stamp ${id}: "npm" must be an object`);
+  }
+  for (const [section, packages] of Object.entries(npm)) {
+    if (!DEPENDENCY_SECTIONS.includes(section)) {
+      throw new StampError(`Stamp ${id}: "npm" can only have ${DEPENDENCY_SECTIONS.join(' and ')}`);
+    }
+    if (!isObject(packages) || Object.values(packages).some((range) => typeof range !== 'string')) {
+      throw new StampError(`Stamp ${id}: "npm.${section}" must map package names to version ranges`);
+    }
+  }
+  return npm;
+}
+
+function validatePatches(patches, id) {
+  if (!Array.isArray(patches)) {
+    throw new StampError(`Stamp ${id}: "patches" must be an array`);
+  }
+  return patches.map((patch, index) => {
+    if (!isObject(patch)) {
+      throw new StampError(`Stamp ${id}: patches[${index}] must be an object`);
+    }
+    const file = requireString(patch.file, `patches[${index}].file`, id);
+    if (isOutside(file)) {
+      throw new StampError(`Stamp ${id}: patches[${index}].file must be a path inside the target`);
+    }
+    if (!file.endsWith('.json')) {
+      throw new StampError(`Stamp ${id}: patches[${index}].file must be a .json file, only JSON can be patched`);
+    }
+    if (!isObject(patch.merge)) {
+      throw new StampError(`Stamp ${id}: patches[${index}].merge must be an object`);
+    }
+    return { file: path.posix.normalize(file), merge: patch.merge };
+  });
+}
+
 /**
  * Validate the content of a stamp.json and apply its defaults.
  * @returns {Omit<Stamp, 'name' | 'variant' | 'id' | 'dir' | 'filesDir'> & { files: string | undefined }}
@@ -112,12 +163,15 @@ export function validateManifest(manifest, id) {
   let files;
   if (manifest.files !== undefined) {
     files = requireString(manifest.files, 'files', id);
-    if (path.isAbsolute(files) || path.normalize(files).split(path.sep).includes('..')) {
+    if (isOutside(files)) {
       throw new StampError(`Stamp ${id}: "files" must be a directory inside the stamp`);
     }
   }
 
-  return { description, mode: manifest.mode, prompts, includes, files };
+  const npm = validateNpm(manifest.npm ?? {}, id);
+  const patches = validatePatches(manifest.patches ?? [], id);
+
+  return { description, mode: manifest.mode, prompts, includes, npm, patches, files };
 }
 
 export class Registry {

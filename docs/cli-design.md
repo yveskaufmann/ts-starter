@@ -13,7 +13,7 @@ ts-starter create <stamp>[:<variant>] [target] [options]
 
 | Part        | Meaning                                                                          |
 | ----------- | -------------------------------------------------------------------------------- |
-| `<stamp>`   | Name of the stamp, e.g. `app`, `editorconfig`, `prettier`                        |
+| `<stamp>`   | Name of the stamp, e.g. `app`, `editorconfig`, `biome`                           |
 | `<variant>` | Flavour of the stamp, e.g. `ts`, `go`. Omitted: a prompt, or an error without a terminal |
 | `[target]`  | Directory to write into. See [Target rules](#target-rules)                       |
 
@@ -118,7 +118,7 @@ stamps/
   editorconfig/
     ts/   stamp.json  files/.editorconfig
     go/   stamp.json  files/.editorconfig
-  prettier/ts/ ...
+  biome/ts/ ...
   vitest/ts/ ...
 ```
 
@@ -139,10 +139,10 @@ stamps/
   ],
   "includes": [
     "editorconfig:ts",
-    "prettier:ts",
     "tsconfig:ts",
     "vitest:ts",
     "vscode:ts",
+    "biome:ts",
     "gitignore:node"
   ]
 }
@@ -163,12 +163,28 @@ stamps/
 | `prompts`     | array of prompt objects        | no       | Questions asked for this stamp; see below                            |
 | `includes`    | array of `"<stamp>:<variant>"` | no       | Stamps applied before this stamp's own files                         |
 | `files`       | string (default `"files"`)     | no       | Directory, relative to the manifest, holding the files of this stamp |
+| `npm`         | object                         | no       | `dependencies` / `devDependencies` (name to range) added to `package.json`; other package managers get their own key |
+| `patches`     | array of `{ file, merge }`     | no       | JSON merged into a file of the target, see [Patches](#patches-and-dependencies) |
 
 A prompt object has `name` (variable name), `message`, optional `default` and optional `type` (`input` or `confirm`, default `input`).
 A prompt with the same `name` in an included stamp is asked once; the including stamp's definition wins.
 
 An `includes` entry must name an existing stamp and variant, and an app may only include `inject` stamps.
 Cycles are an error and the message lists the chain.
+
+## Patches and dependencies
+
+A stamp can change a JSON file without owning it, so tools like Biome add their own `.vscode` settings and no stamp per
+language is needed.
+
+- The base is the file rendered by another stamp (e.g. `package.json` of `app:ts`), else the file in the target, else `{}`.
+- Objects are merged recursively, arrays get the missing values appended (never replaced), every other value is replaced
+  by the patch value. A replaced value is reported as a hint.
+- `npm` packages are added to `package.json` sorted by name. A package that is already listed in `dependencies` or
+  `devDependencies` keeps its version and only a hint is shown.
+- Patches run after rendering, in stamp order, before the conflict check. A patch that changes nothing keeps the file
+  byte for byte (`unchanged`). A target file that is only merged into is `patch` and written without asking.
+- Only JSON files, written with 2 spaces. Invalid JSON is an error before anything is written.
 
 ## File rendering
 
@@ -178,7 +194,7 @@ Cycles are an error and the message lists the chain.
 - Dot-files are included. Empty directories are not created.
 - Variables are the answers to the prompts. Helpers: `dashCase`, `camelCase`, `pascalCase`, `snakeCase`, `upperCase`, `lowerCase`.
 - A missing variable is an error, not an empty string.
-- File contents are written exactly as rendered; Prettier formatting is checked by the CI job, not applied by the CLI.
+- File contents are written exactly as rendered; formatting of the generated project is checked by the CI job, not applied by the CLI.
 
 ## Resolving a run
 
@@ -187,6 +203,7 @@ Cycles are an error and the message lists the chain.
 3. Collect the prompts of all stamps, drop duplicates, and answer them from `--set`, then `--yes` defaults, then interactive prompts.
 4. Resolve the target directory (see [Target rules](#target-rules)).
 5. Render every file in memory. Later stamps overwrite earlier ones, and the stamp's own files come last.
+   Then apply `npm` and `patches` (see [Patches and dependencies](#patches-and-dependencies)); this can add hints.
 6. Compare with the target directory and handle conflicts (see [Conflicts](#conflicts)).
 7. Write the files; `--dry-run` stops before this step and prints the plan.
 
@@ -235,13 +252,13 @@ Choices:
 | `app:ts`          | `package.json.hbs`, `README.md.hbs`, `Makefile`, `src/*`, `.nvmrc` |
 | `editorconfig:ts` | `.editorconfig`                                                    |
 | `editorconfig:go` | `.editorconfig` (tabs for Go files)                                |
-| `prettier:ts`     | `.prettierrc.json`                                                 |
+| `biome:ts`        | `biome.json` (+ package.json and `.vscode` patches)                |
 | `tsconfig:ts`     | `tsconfig.json`                                                    |
 | `vitest:ts`       | `vitest.config.ts`                                                 |
 | `vscode:ts`       | `.vscode/settings.json`, `.vscode/launch.json`                     |
 | `gitignore:node`  | `.gitignore`                                                       |
 
-`vitest:ts` and `tsconfig:ts` write only their own files. Their entries in `package.json` stay in `app:ts` until stamps can edit files.
+`vitest:ts` and `tsconfig:ts` write only their own files. Their entries in `package.json` stay in `app:ts`; `biome:ts` is the first stamp that adds its package through `npm`.
 The project generated by `create app:ts` must match the one generated today; the snapshot test and the CI job check this.
 
 ## Testing

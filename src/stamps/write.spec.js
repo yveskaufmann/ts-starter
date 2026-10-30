@@ -2,9 +2,8 @@ import { access, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
-
-import { planWrites, resolveConflicts, writePlan } from './write.js';
 import { tempDir, writeTree } from './test-helpers.js';
+import { planWrites, resolveConflicts, writePlan } from './write.js';
 
 const file = (filePath, content, mode = 0o644) => ({
   path: filePath,

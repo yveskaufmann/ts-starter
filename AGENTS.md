@@ -17,7 +17,8 @@ Details: [README.md](README.md) for usage, [docs/cli-design.md](docs/cli-design.
 ```bash
 npm ci
 npm test                # vitest
-npm run format:check    # prettier, also `npm run format`
+npm run format:check    # biome, also `npm run format`
+npm run check           # biome check --write
 node index.js create app:ts demo --yes
 ```
 

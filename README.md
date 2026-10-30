@@ -89,7 +89,7 @@ ts-starter create editorconfig:ts
 ts-starter create editorconfig:go service
 
 # Look first at what would happen
-ts-starter create prettier:ts --dry-run
+ts-starter create biome:ts --dry-run
 ```
 
 #### Where the files go
@@ -173,23 +173,24 @@ ts-starter list
 | `app:ts`          | `project` | A TypeScript app: `package.json`, `README.md`, `Makefile`, `.nvmrc`, `src/`, plus the stamps below |
 | `editorconfig:ts` | `inject`  | `.editorconfig` for TypeScript and JavaScript                                                      |
 | `editorconfig:go` | `inject`  | `.editorconfig` for Go (tabs)                                                                      |
-| `prettier:ts`     | `inject`  | `.prettierrc.json`                                                                                 |
+| `biome:ts`        | `inject`  | `biome.json`, the `@biomejs/biome` dependency and the Biome settings in `.vscode/`                 |
 | `tsconfig:ts`     | `inject`  | `tsconfig.json` for node                                                                           |
 | `vitest:ts`       | `inject`  | `vitest.config.ts`                                                                                 |
-| `vscode:ts`       | `inject`  | `.vscode/settings.json` and `.vscode/launch.json`                                                  |
+| `vscode:ts`       | `inject`  | `.vscode/settings.json` (import settings) and `.vscode/launch.json`                                |
 | `gitignore:node`  | `inject`  | `.gitignore`                                                                                       |
 
 `ts-starter info app:ts` shows the values a stamp asks for, the stamps it includes and the files it writes.
 
 The generated TypeScript project uses [Vitest](https://vitest.dev) for the tests, [tsx](https://tsx.is) to run the code,
-Prettier for the formatting and a `Makefile` with the targets `build`, `test`, `start`, `clean` and `help`.
+[Biome](https://biomejs.dev) for formatting and linting and a `Makefile` with the targets `build`, `test`, `start`, `clean` and `help`.
 
 ## Development
 
 ```bash
 npm install
 npm test                # unit tests
-npm run format:check    # prettier
+npm run format:check    # biome, also `npm run format`
+npm run check           # biome check --write
 node index.js create app:ts demo
 ```
 
@@ -220,6 +221,26 @@ stamps/editorconfig/go/
   files are copied as they are. Use `.gitignore.hbs` for a `.gitignore`, npm does not publish files with that name.
   Missing values are an error. The helpers `dashCase`, `camelCase`, `pascalCase`, `snakeCase`, `upperCase` and
   `lowerCase` are available.
+- `npm` lists the npm packages the stamp needs, as `devDependencies` and/or `dependencies` (name to version range).
+  The prefix leaves room for other package managers later, e.g. `go`.
+- `patches` lists changes to JSON files that other stamps or the user own, as `{ "file": ..., "merge": {...} }`.
+
+```json
+{
+  "npm": { "devDependencies": { "@biomejs/biome": "2.6.4" } },
+  "patches": [
+    { "file": ".vscode/extensions.json", "merge": { "recommendations": ["biomejs.biome"] } },
+    { "file": ".vscode/settings.json", "merge": { "editor.defaultFormatter": "biomejs.biome" } }
+  ]
+}
+```
+
+`npm` and patches work on the file of the same name that another stamp renders, otherwise on the file in the
+target directory, otherwise a new file is created. Objects are merged, arrays get the missing values added and any other
+value is replaced by the value of the patch. A package that is already in `dependencies` or `devDependencies` is not
+touched. Replaced values and kept packages are shown as `hint:` lines. A file the patch only merges into is written
+without asking (`patch` in the output) and nothing is changed when the patch has no effect. Only JSON files can be
+patched.
 
 Names and variants may only contain lower case letters, digits and `-`. A new stamp shows up in `list` without further
 changes.

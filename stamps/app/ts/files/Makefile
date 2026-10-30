@@ -44,6 +44,11 @@ start: 													## Start the application in development mode
 test: 													## Run the tests
 	npx vitest run $(ARGS)
 
+.PHONY: check
+check: node_modules 										## Format, lint and type check the project
+	npx biome check --write .
+	npx tsc --noEmit --project .
+
 .PHONY: help
 help: 													## Render the possible targets in this Makefile along with their descriptions
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) |  awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'cat

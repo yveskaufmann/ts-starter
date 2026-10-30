@@ -51,6 +51,35 @@ describe('prepareRun', () => {
     expect(result.plan[1].content.toString()).toBe('# My Test by me\n');
   });
 
+  it('patches files and reports hints', async () => {
+    const reg = await loadRegistry(
+      await makeStamps({
+        'tool:ts': {
+          manifest: {
+            description: 'Tool',
+            mode: 'inject',
+            npm: { devDependencies: { tool: '1.0.0' } },
+            patches: [{ file: 'settings.json', merge: { formatter: 'tool' } }],
+          },
+        },
+      }),
+    );
+    const cwd = await tempDir();
+    await writeTree(cwd, {
+      'package.json': '{ "devDependencies": { "tool": "^0.5.0" } }',
+      'settings.json': '{ "formatter": "other" }',
+    });
+
+    const result = await prepareRun({ registry: reg, stamp: reg.get('tool', 'ts'), cwd, yes: true });
+
+    expect(result.plan.map((entry) => [entry.path, entry.status])).toEqual([
+      ['package.json', 'identical'],
+      ['settings.json', 'patched'],
+    ]);
+    expect(result.hints).toHaveLength(2);
+    expect(await readFile(path.join(cwd, 'settings.json'), 'utf8')).toBe('{ "formatter": "other" }');
+  });
+
   it('writes nothing while preparing', async () => {
     const cwd = await tempDir();
     await run({ id: 'app:ts', cwd, target: 'demo' });

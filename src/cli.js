@@ -9,7 +9,7 @@ import { create } from './commands/create.js';
 import { info } from './commands/info.js';
 import { list } from './commands/list.js';
 import { UsageError } from './errors.js';
-import { StampError, loadRegistry } from './stamps/index.js';
+import { loadRegistry, StampError } from './stamps/index.js';
 import { createTerminalUi } from './ui.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));

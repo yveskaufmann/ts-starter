@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { loadRegistry, renderStamps } from './stamps/index.js';
+import { applyPatches, loadRegistry, renderStamps } from './stamps/index.js';
+import { tempDir } from './stamps/test-helpers.js';
 
 const stampsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'stamps');
 const answers = { name: 'Demo App', description: 'A demo & more', author: 'Me <me@example.org>' };
@@ -19,10 +20,10 @@ describe('shipped stamps', () => {
   it('provides the expected stamps and variants', () => {
     expect(registry.all().map((stamp) => stamp.id)).toEqual([
       'app:ts',
+      'biome:ts',
       'editorconfig:go',
       'editorconfig:ts',
       'gitignore:node',
-      'prettier:ts',
       'tsconfig:ts',
       'vitest:ts',
       'vscode:ts',
@@ -47,18 +48,20 @@ describe('shipped stamps', () => {
 
     expect(order).toEqual([
       'editorconfig:ts',
-      'prettier:ts',
       'tsconfig:ts',
       'vitest:ts',
       'vscode:ts',
+      'biome:ts',
       'gitignore:node',
       'app:ts',
     ]);
   });
 
   it('renders the app:ts project', async () => {
-    const files = await renderStamps(registry.flatten(registry.get('app', 'ts')), answers);
+    const stamps = registry.flatten(registry.get('app', 'ts'));
+    const { files, hints } = await applyPatches(await renderStamps(stamps, answers), stamps, await tempDir());
 
+    expect(hints).toEqual([]);
     expect(Object.fromEntries(files.map((file) => [file.path, file.content.toString()]))).toMatchSnapshot();
   });
 

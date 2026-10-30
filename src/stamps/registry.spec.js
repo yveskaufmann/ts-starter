@@ -24,8 +24,34 @@ describe('validateManifest', () => {
       mode: 'inject',
       prompts: [],
       includes: [],
+      npm: {},
+      patches: [],
       files: undefined,
     });
+  });
+
+  it('accepts npm packages and patches', () => {
+    const manifest = {
+      ...inject,
+      npm: { devDependencies: { tool: '1.0.0' } },
+      patches: [{ file: '.vscode/settings.json', merge: { a: 1 } }],
+    };
+    expect(validateManifest(manifest, 'a:b')).toMatchObject({
+      npm: { devDependencies: { tool: '1.0.0' } },
+      patches: [{ file: '.vscode/settings.json', merge: { a: 1 } }],
+    });
+  });
+
+  it.each([
+    ['npm that is not an object', { npm: [] }, /"npm" must be an object/],
+    ['an unknown npm section', { npm: { peerDependencies: {} } }, /can only have/],
+    ['a version that is not a string', { npm: { devDependencies: { tool: 1 } } }, /version ranges/],
+    ['patches that are not an array', { patches: {} }, /"patches" must be an array/],
+    ['a patch without merge', { patches: [{ file: 'a.json' }] }, /merge must be an object/],
+    ['a patch outside of the target', { patches: [{ file: '../a.json', merge: {} }] }, /inside the target/],
+    ['a patch of a file that is not json', { patches: [{ file: 'a.yml', merge: {} }] }, /\.json file/],
+  ])('rejects %s', (_label, extra, message) => {
+    expect(() => validateManifest({ ...inject, ...extra }, 'a:b')).toThrow(message);
   });
 
   it('defaults the prompt type to input', () => {

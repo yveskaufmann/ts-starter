@@ -9,7 +9,8 @@ import { StampError } from './errors.js';
  * @property {Buffer} content
  * @property {number} mode
  * @property {string} stamp
- * @property {'new' | 'identical' | 'conflict'} status
+ * @property {boolean} [patched] Merged into the file already in the target, so it is written without asking
+ * @property {'new' | 'identical' | 'patched' | 'conflict'} status
  * @property {Buffer} [existing] Content of the existing file when the status is `conflict`
  * @property {'write' | 'skip'} action Set by `resolveConflicts`, `new` entries are written and `identical` ones skipped
  */
@@ -48,11 +49,13 @@ export async function planWrites(files, targetDir) {
       throw new StampError(`Cannot write ${file.path}: ${full} exists and is not a regular file`);
     }
     const existing = await readFile(full);
-    plan.push(
-      existing.equals(file.content)
-        ? { ...file, status: 'identical', action: 'skip' }
-        : { ...file, status: 'conflict', existing, action: 'write' },
-    );
+    if (existing.equals(file.content)) {
+      plan.push({ ...file, status: 'identical', action: 'skip' });
+    } else if (file.patched) {
+      plan.push({ ...file, status: 'patched', existing, action: 'write' });
+    } else {
+      plan.push({ ...file, status: 'conflict', existing, action: 'write' });
+    }
   }
   return plan;
 }

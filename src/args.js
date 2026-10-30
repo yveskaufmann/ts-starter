@@ -5,14 +5,14 @@ import { UsageError } from './errors.js';
 export const COMMANDS = ['create', 'list', 'info', 'completion'];
 
 const options = {
-  'force': { type: 'boolean' },
+  force: { type: 'boolean' },
   'skip-existing': { type: 'boolean' },
   'dry-run': { type: 'boolean' },
-  'yes': { type: 'boolean', short: 'y' },
-  'set': { type: 'string', multiple: true },
-  'json': { type: 'boolean' },
-  'help': { type: 'boolean', short: 'h' },
-  'version': { type: 'boolean', short: 'v' },
+  yes: { type: 'boolean', short: 'y' },
+  set: { type: 'string', multiple: true },
+  json: { type: 'boolean' },
+  help: { type: 'boolean', short: 'h' },
+  version: { type: 'boolean', short: 'v' },
 };
 
 /** Which options a command accepts besides --help. */

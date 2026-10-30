@@ -57,7 +57,7 @@ jobs:
 
       - name: Check formatting
         working-directory: ${{ runner.temp }}/test-project
-        run: npx prettier --check .
+        run: npx biome ci .
 
       - name: Build
         working-directory: ${{ runner.temp }}/test-project

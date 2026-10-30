@@ -21,7 +21,7 @@ describe('renderStamp', () => {
         files: {
           'README.md.hbs': '# {{name}}\n',
           '.editorconfig': 'root = true\n',
-          'src': { 'a.txt': '{{not rendered}}' },
+          src: { 'a.txt': '{{not rendered}}' },
         },
       },
     });

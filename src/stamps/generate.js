@@ -1,12 +1,13 @@
-import { answerPrompts, collectPrompts } from './prompts.js';
 import { StampError } from './errors.js';
+import { applyPatches } from './patch.js';
+import { answerPrompts, collectPrompts } from './prompts.js';
 import { renderStamps } from './render.js';
 import { resolveTargetDir, targetAnswers } from './target.js';
 import { planWrites } from './write.js';
 
 /**
  * Everything up to the point where files would be written: resolve includes, answer the prompts, find the target
- * directory, render the files in memory and compare them with the target. Nothing is written.
+ * directory, render the files in memory, apply the patches and compare them with the target. Nothing is written.
  *
  * @param {object} options
  * @param {import('./registry.js').Registry} options.registry
@@ -27,8 +28,9 @@ export async function prepareRun({ registry, stamp, target, cwd, set = {}, yes =
 
   const answers = await answerPrompts(collectPrompts(stamps), { set: { ...set, ...fromTarget }, yes, ask });
   const targetDir = await resolveTargetDir(stamp, target, answers, cwd);
-  const files = await renderStamps(stamps, answers);
+  const rendered = await renderStamps(stamps, answers);
+  const { files, hints } = await applyPatches(rendered, stamps, targetDir);
   const plan = await planWrites(files, targetDir);
 
-  return { stamps, answers, targetDir, files, plan };
+  return { stamps, answers, targetDir, files, hints, plan };
 }

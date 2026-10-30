@@ -25,7 +25,7 @@
     "!src/**/test-helpers.js"
   ],
   "devDependencies": {
-    "prettier": "^3.9.10",
+    "@biomejs/biome": "2.6.4",
     "semantic-release": "^25.0.9",
     "vitest": "^5.0.5"
   },
@@ -51,7 +51,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "format:check": "prettier --check src vitest.config.js",
-    "format": "prettier --write src vitest.config.js"
+    "check": "biome check --write .",
+    "format:check": "biome check .",
+    "format": "biome check --write ."
   }
 }
