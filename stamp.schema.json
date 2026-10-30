@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/yveskaufmann/ts-starter/main/stamp.schema.json",
+  "title": "ts-starter stamp",
+  "description": "The stamp.json of a stamp in stamps/<name>/<variant>/",
+  "type": "object",
+  "required": ["description", "mode"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "description": {
+      "description": "One line shown by `list` and `info`",
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "description": "`project` creates a new directory and needs a prompt called `name`, `inject` adds files to a directory",
+      "enum": ["project", "inject"]
+    },
+    "prompts": {
+      "description": "Questions asked for this stamp, the answers are available as variables in `*.hbs` files",
+      "type": "array",
+      "items": { "$ref": "#/definitions/prompt" }
+    },
+    "includes": {
+      "description": "Inject stamps applied before this stamp's own files, as `<stamp>:<variant>`",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$" }
+    },
+    "files": {
+      "description": "Directory, relative to the stamp.json, holding the files of this stamp",
+      "type": "string",
+      "minLength": 1,
+      "default": "files"
+    },
+    "npm": {
+      "description": "npm packages added to package.json. A package that is already listed keeps its version.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dependencies": { "$ref": "#/definitions/packages" },
+        "devDependencies": { "$ref": "#/definitions/packages" }
+      }
+    },
+    "patches": {
+      "description": "Changes to JSON files of the target: objects are merged, arrays get the missing values, other values are replaced",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "merge"],
+        "additionalProperties": false,
+        "properties": {
+          "file": {
+            "description": "Path of a .json file relative to the target directory",
+            "type": "string",
+            "pattern": "\\.json$"
+          },
+          "merge": {
+            "description": "Values merged into the file",
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "packages": {
+      "description": "Package names mapped to version ranges",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "prompt": {
+      "type": "object",
+      "required": ["name", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "description": "Name of the variable", "type": "string", "minLength": 1 },
+        "message": { "description": "The question", "type": "string", "minLength": 1 },
+        "type": { "enum": ["input", "confirm"], "default": "input" },
+        "default": { "description": "A string for `input`, a boolean for `confirm`", "type": ["string", "boolean"] }
+      }
+    }
+  }
+}

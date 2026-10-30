@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,6 +29,13 @@ describe('shipped stamps', () => {
       'vitest:ts',
       'vscode:ts',
     ]);
+  });
+
+  it('references the stamp schema in every stamp.json', async () => {
+    for (const stamp of registry.all()) {
+      const { $schema } = JSON.parse(await readFile(path.join(stamp.dir, 'stamp.json'), 'utf8'));
+      expect(path.resolve(stamp.dir, $schema), stamp.id).toBe(path.join(stampsDir, '..', 'stamp.schema.json'));
+    }
   });
 
   it('describes every stamp', () => {

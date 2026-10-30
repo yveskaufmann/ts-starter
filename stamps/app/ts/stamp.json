@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../stamp.schema.json",
   "description": "TypeScript application with vitest, prettier and tsx",
   "mode": "project",
   "prompts": [

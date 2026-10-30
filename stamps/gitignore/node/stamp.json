@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../stamp.schema.json",
   "description": ".gitignore for node projects",
   "mode": "inject"
 }

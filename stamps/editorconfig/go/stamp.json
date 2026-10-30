@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../stamp.schema.json",
   "description": "EditorConfig for Go projects (gofmt style, tabs)",
   "mode": "inject"
 }

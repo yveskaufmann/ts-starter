@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../stamp.schema.json",
   "description": "Biome for formatting and linting, set up as VS Code formatter (expects an .editorconfig)",
   "mode": "inject",
   "npm": {
