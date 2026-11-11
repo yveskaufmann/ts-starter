@@ -58,9 +58,10 @@ describe('prepareRun', () => {
           manifest: {
             description: 'Tool',
             mode: 'inject',
-            npm: { devDependencies: { tool: '1.0.0' } },
+            npm: 'files/package.json',
             patches: [{ file: 'settings.json', merge: { formatter: 'tool' } }],
           },
+          files: { 'package.json': '{ "devDependencies": { "tool": "1.0.0" } }' },
         },
       }),
     );

@@ -4,7 +4,8 @@ import path from 'node:path';
 import { StampError } from './errors.js';
 
 const MODES = ['project', 'inject'];
-const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies'];
+const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'peerDependencies'];
+const DEPENDENCY_FILE = 'package.json';
 const PROMPT_TYPES = ['input', 'confirm'];
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -23,6 +24,13 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
  */
 
 /**
+ * @typedef {object} Dependencies
+ * @property {Record<string, string>} [dependencies]
+ * @property {Record<string, string>} [devDependencies]
+ * @property {Record<string, string>} [peerDependencies]
+ */
+
+/**
  * @typedef {object} Stamp
  * @property {string} name
  * @property {string} variant
@@ -31,8 +39,8 @@ const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
  * @property {'project' | 'inject'} mode
  * @property {Prompt[]} prompts
  * @property {string[]} includes
- * @property {{ dependencies?: Record<string, string>, devDependencies?: Record<string, string> }} npm
- *   npm packages the stamp needs in package.json
+ * @property {Dependencies} npm npm packages the stamp needs in package.json, read from the file named in stamp.json
+ * @property {string} [npmFile] Absolute path of the dependency file named by `npm` in stamp.json
  * @property {Patch[]} patches
  * @property {string} dir Directory of the stamp.json
  * @property {string} filesDir Directory holding the files of the stamp
@@ -90,18 +98,37 @@ function isOutside(file) {
 }
 
 function validateNpm(npm, id) {
-  if (!isObject(npm)) {
-    throw new StampError(`Stamp ${id}: "npm" must be an object`);
+  if (typeof npm !== 'string' || npm.trim() === '') {
+    throw new StampError(
+      `Stamp ${id}: "npm" must be the path of a ${DEPENDENCY_FILE} with the dependencies, e.g. "files/${DEPENDENCY_FILE}"`,
+    );
   }
-  for (const [section, packages] of Object.entries(npm)) {
-    if (!DEPENDENCY_SECTIONS.includes(section)) {
-      throw new StampError(`Stamp ${id}: "npm" can only have ${DEPENDENCY_SECTIONS.join(' and ')}`);
-    }
-    if (!isObject(packages) || Object.values(packages).some((range) => typeof range !== 'string')) {
-      throw new StampError(`Stamp ${id}: "npm.${section}" must map package names to version ranges`);
-    }
+  if (isOutside(npm)) {
+    throw new StampError(`Stamp ${id}: "npm" must be a file inside the stamp`);
+  }
+  if (path.basename(npm) !== DEPENDENCY_FILE) {
+    throw new StampError(`Stamp ${id}: "npm" must name a file called ${DEPENDENCY_FILE}, so Dependabot can update it`);
   }
   return npm;
+}
+
+/**
+ * Validate the content of the dependency file of a stamp.
+ * @returns {Dependencies}
+ */
+export function validateDependencies(content, file, id) {
+  if (!isObject(content)) {
+    throw new StampError(`Stamp ${id}: ${file} must contain an object`);
+  }
+  for (const [section, packages] of Object.entries(content)) {
+    if (!DEPENDENCY_SECTIONS.includes(section)) {
+      throw new StampError(`Stamp ${id}: ${file} can only have ${DEPENDENCY_SECTIONS.join(', ')}, found "${section}"`);
+    }
+    if (!isObject(packages) || Object.values(packages).some((range) => typeof range !== 'string')) {
+      throw new StampError(`Stamp ${id}: "${section}" in ${file} must map package names to version ranges`);
+    }
+  }
+  return content;
 }
 
 function validatePatches(patches, id) {
@@ -128,7 +155,7 @@ function validatePatches(patches, id) {
 
 /**
  * Validate the content of a stamp.json and apply its defaults.
- * @returns {Omit<Stamp, 'name' | 'variant' | 'id' | 'dir' | 'filesDir'> & { files: string | undefined }}
+ * @returns {Omit<Stamp, 'name' | 'variant' | 'id' | 'dir' | 'filesDir' | 'npm' | 'npmFile'> & { files: string | undefined, npm: string | undefined }}
  */
 export function validateManifest(manifest, id) {
   if (!isObject(manifest)) {
@@ -168,7 +195,7 @@ export function validateManifest(manifest, id) {
     }
   }
 
-  const npm = validateNpm(manifest.npm ?? {}, id);
+  const npm = manifest.npm === undefined ? undefined : validateNpm(manifest.npm, id);
   const patches = validatePatches(manifest.patches ?? [], id);
 
   return { description, mode: manifest.mode, prompts, includes, npm, patches, files };
@@ -256,6 +283,17 @@ async function subdirectories(dir) {
     .sort();
 }
 
+async function readDependencies(file, relative, id) {
+  let content;
+  try {
+    content = JSON.parse(await readFile(file, 'utf8'));
+  } catch (error) {
+    const reason = error.code === 'ENOENT' ? 'the file is missing' : error.message;
+    throw new StampError(`Stamp ${id}: cannot read the dependency file ${relative}: ${reason}`);
+  }
+  return validateDependencies(content, relative, id);
+}
+
 /**
  * Load all stamps below `<stampsDir>/<name>/<variant>/stamp.json`.
  * Fails when a stamp is invalid, includes an unknown stamp, or the includes form a cycle.
@@ -281,7 +319,8 @@ export async function loadRegistry(stampsDir) {
         throw new StampError(`Stamp ${id}: cannot read ${manifestPath}: ${reason}`);
       }
 
-      const { files, ...rest } = validateManifest(manifest, id);
+      const { files, npm, ...rest } = validateManifest(manifest, id);
+      const npmFile = npm === undefined ? undefined : path.join(dir, npm);
       stamps.push({
         name,
         variant,
@@ -290,6 +329,8 @@ export async function loadRegistry(stampsDir) {
         filesDir: path.join(dir, files ?? 'files'),
         filesDeclared: files !== undefined,
         ...rest,
+        npm: npmFile === undefined ? {} : await readDependencies(npmFile, npm, id),
+        ...(npmFile !== undefined && { npmFile }),
       });
     }
   }

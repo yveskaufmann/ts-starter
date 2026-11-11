@@ -18,7 +18,7 @@
       "enum": ["project", "inject"]
     },
     "prompts": {
-      "description": "Questions asked for this stamp, the answers are available as variables in `*.hbs` files",
+      "description": "Questions asked for this stamp, the answers are available as variables in `*.hbs` and `package.json` files",
       "type": "array",
       "items": { "$ref": "#/definitions/prompt" }
     },
@@ -34,13 +34,9 @@
       "default": "files"
     },
     "npm": {
-      "description": "npm packages added to package.json. A package that is already listed keeps its version.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "dependencies": { "$ref": "#/definitions/packages" },
-        "devDependencies": { "$ref": "#/definitions/packages" }
-      }
+      "description": "Path, relative to the stamp.json, of a package.json that only lists dependencies, devDependencies and/or peerDependencies. They are added to the package.json of the target, a package that is already listed keeps its version. The file itself is not written.",
+      "type": "string",
+      "pattern": "(^|/)package\\.json$"
     },
     "patches": {
       "description": "Changes to JSON files of the target: objects are merged, arrays get the missing values, other values are replaced",
@@ -64,11 +60,6 @@
     }
   },
   "definitions": {
-    "packages": {
-      "description": "Package names mapped to version ranges",
-      "type": "object",
-      "additionalProperties": { "type": "string" }
-    },
     "prompt": {
       "type": "object",
       "required": ["name", "message"],

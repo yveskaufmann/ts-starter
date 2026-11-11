@@ -4,7 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { loadRegistry } from './registry.js';
-import { renderStamp, renderStamps } from './render.js';
+import { listStampFiles, renderStamp, renderStamps } from './render.js';
 import { makeStamps } from './test-helpers.js';
 
 const inject = { description: 'A stamp', mode: 'inject' };
@@ -34,6 +34,23 @@ describe('renderStamp', () => {
       ['src/a.txt', '{{not rendered}}'],
     ]);
     expect(files.every((file) => file.stamp === 'a:x')).toBe(true);
+  });
+
+  it('renders package.json without .hbs and leaves out the dependency file', async () => {
+    const registry = await load({
+      'app:x': { manifest: inject, files: { 'package.json': '{ "name": "{{name}}" }' } },
+      'tool:x': {
+        manifest: { ...inject, npm: 'files/package.json' },
+        files: { 'package.json': '{ "devDependencies": { "tool": "1.0.0" } }', 'tool.json': '{}' },
+      },
+    });
+
+    const app = await renderStamp(registry.get('app', 'x'), { name: 'demo' });
+    const tool = await renderStamp(registry.get('tool', 'x'), {});
+
+    expect(app.map((file) => [file.path, file.content.toString()])).toEqual([['package.json', '{ "name": "demo" }']]);
+    expect(tool.map((file) => file.path)).toEqual(['tool.json']);
+    expect(await listStampFiles(registry.get('tool', 'x'))).toEqual(['tool.json']);
   });
 
   it('does not escape values and provides the case helpers', async () => {

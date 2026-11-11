@@ -174,7 +174,7 @@ ts-starter list
 | `editorconfig:ts` | `inject`  | `.editorconfig` for TypeScript and JavaScript                                                      |
 | `editorconfig:go` | `inject`  | `.editorconfig` for Go (tabs)                                                                      |
 | `biome:ts`        | `inject`  | `biome.json`, the `@biomejs/biome` dependency and the Biome settings in `.vscode/`                 |
-| `vitest:ts`       | `inject`  | `vitest.config.ts`                                                                                 |
+| `vitest:ts`       | `inject`  | `vitest.config.ts` and the `vitest` dependency                                                     |
 | `gitignore:node`  | `inject`  | `.gitignore`                                                                                       |
 
 `ts-starter info app:ts` shows the values a stamp asks for, the stamps it includes and the files it writes.
@@ -215,17 +215,27 @@ stamps/editorconfig/go/
 - `prompts` lists what the stamp asks for: `name`, `message`, optional `default` and `type` (`input` or `confirm`).
 - `includes` lists `<stamp>:<variant>` ids of `inject` stamps that are applied first. Prompts are asked once, even if
   several stamps use them.
-- Files ending in `.hbs` are rendered with [Handlebars](https://handlebarsjs.com) and lose the extension, all other
-  files are copied as they are. Use `.gitignore.hbs` for a `.gitignore`, npm does not publish files with that name.
+- Files ending in `.hbs` are rendered with [Handlebars](https://handlebarsjs.com) and lose the extension. A
+  `package.json` is rendered too, without the extension, so Dependabot can read it. All other files are copied as they
+  are. Use `.gitignore.hbs` for a `.gitignore`, npm does not publish files with that name.
   Missing values are an error. The helpers `dashCase`, `camelCase`, `pascalCase`, `snakeCase`, `upperCase` and
   `lowerCase` are available.
-- `npm` lists the npm packages the stamp needs, as `devDependencies` and/or `dependencies` (name to version range).
-  The prefix leaves room for other package managers later, e.g. `go`.
+- `npm` is the path, relative to the `stamp.json`, of a `package.json` with the npm packages the stamp needs. It may
+  only contain `dependencies`, `devDependencies` and `peerDependencies`. The file is not written itself, its packages
+  are added to the `package.json` of the target. Keep it at `files/package.json`, there Dependabot keeps the versions
+  up to date. The key leaves room for other package managers later, e.g. `go`.
 - `patches` lists changes to JSON files that other stamps or the user own, as `{ "file": ..., "merge": {...} }`.
+
+```
+stamps/biome/ts/
+  stamp.json
+  files/biome.json.hbs
+  files/package.json     # { "devDependencies": { "@biomejs/biome": "2.6.4" } }
+```
 
 ```json
 {
-  "npm": { "devDependencies": { "@biomejs/biome": "2.6.4" } },
+  "npm": "files/package.json",
   "patches": [
     { "file": ".vscode/extensions.json", "merge": { "recommendations": ["biomejs.biome"] } },
     { "file": ".vscode/settings.json", "merge": { "editor.defaultFormatter": "biomejs.biome" } }
@@ -235,10 +245,10 @@ stamps/editorconfig/go/
 
 `npm` and patches work on the file of the same name that another stamp renders, otherwise on the file in the
 target directory, otherwise a new file is created. Objects are merged, arrays get the missing values added and any other
-value is replaced by the value of the patch. A package that is already in `dependencies` or `devDependencies` is not
-touched. Replaced values and kept packages are shown as `hint:` lines. A file the patch only merges into is written
-without asking (`patch` in the output) and nothing is changed when the patch has no effect. Only JSON files can be
-patched.
+value is replaced by the value of the patch. A package that is already in `dependencies`, `devDependencies` or
+`peerDependencies` is not touched. Replaced values and kept packages are shown as `hint:` lines. A file the patch only
+merges into is written without asking (`patch` in the output) and nothing is changed when the patch has no effect. Only
+JSON files can be patched.
 
 Names and variants may only contain lower case letters, digits and `-`. A new stamp shows up in `list` without further
 changes.

@@ -110,6 +110,19 @@ describe('applyPatches', () => {
       expect(result.hints).toEqual([]);
     });
 
+    it('adds peer dependencies and keeps a package listed in another section', async () => {
+      const files = [file('package.json', '{ "devDependencies": { "react": "^19" } }')];
+      const lib = stamp('lib:ts', { npm: { peerDependencies: { react: '>=18', 'react-dom': '>=18' } } });
+
+      const result = await applyPatches(files, [lib], await tempDir());
+
+      expect(json(result, 'package.json')).toEqual({
+        devDependencies: { react: '^19' },
+        peerDependencies: { 'react-dom': '>=18' },
+      });
+      expect(result.hints).toEqual(['package.json: react is already a dependency (^19), not changed (lib:ts)']);
+    });
+
     it('keeps an existing package and only shows a hint', async () => {
       const target = await tempDir();
       await writeTree(target, { 'package.json': '{ "dependencies": { "@biomejs/biome": "^2.0.0" } }' });
