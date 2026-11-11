@@ -7,6 +7,8 @@ import Handlebars from 'handlebars';
 import { StampError } from './errors.js';
 
 const TEMPLATE_EXTENSION = '.hbs';
+// Rendered like a template without the extension, so tools like Dependabot can read it as a package.json
+const TEMPLATE_NAMES = ['package.json'];
 
 const helpers = {
   dashCase: kebabCase,
@@ -42,6 +44,24 @@ async function* walk(dir) {
   }
 }
 
+/**
+ * The files a stamp writes: every file below its files directory except the dependency file named by `npm`.
+ * @returns {AsyncGenerator<{ file: string, relative: string, output: string, template: boolean }>}
+ */
+async function* stampFiles(stamp) {
+  for await (const file of walk(stamp.filesDir)) {
+    if (file === stamp.npmFile) {
+      continue;
+    }
+    const relative = path.relative(stamp.filesDir, file).split(path.sep).join('/');
+    if (relative.endsWith(TEMPLATE_EXTENSION)) {
+      yield { file, relative, output: relative.slice(0, -TEMPLATE_EXTENSION.length), template: true };
+    } else {
+      yield { file, relative, output: relative, template: TEMPLATE_NAMES.includes(path.posix.basename(relative)) };
+    }
+  }
+}
+
 async function exists(dir) {
   try {
     return (await stat(dir)).isDirectory();
@@ -63,7 +83,8 @@ function renderTemplate(source, answers, file, stampId) {
 }
 
 /**
- * Render the files of one stamp: `*.hbs` files are rendered and lose the extension, all others are copied as they are.
+ * Render the files of one stamp: `*.hbs` files are rendered and lose the extension, `package.json` files are rendered
+ * too, all others are copied as they are. The dependency file named by `npm` is not part of the output.
  * @returns {Promise<RenderedFile[]>}
  */
 export async function renderStamp(stamp, answers) {
@@ -75,21 +96,14 @@ export async function renderStamp(stamp, answers) {
   }
 
   const files = [];
-  for await (const file of walk(stamp.filesDir)) {
-    const relative = path.relative(stamp.filesDir, file).split(path.sep).join('/');
+  for await (const { file, relative, output, template } of stampFiles(stamp)) {
     const [content, { mode }] = await Promise.all([readFile(file), stat(file)]);
-
-    if (relative.endsWith(TEMPLATE_EXTENSION)) {
-      const rendered = renderTemplate(content.toString('utf8'), answers, relative, stamp.id);
-      files.push({
-        path: relative.slice(0, -TEMPLATE_EXTENSION.length),
-        content: Buffer.from(rendered),
-        mode,
-        stamp: stamp.id,
-      });
-    } else {
-      files.push({ path: relative, content, mode, stamp: stamp.id });
-    }
+    files.push({
+      path: output,
+      content: template ? Buffer.from(renderTemplate(content.toString('utf8'), answers, relative, stamp.id)) : content,
+      mode,
+      stamp: stamp.id,
+    });
   }
   return files;
 }
@@ -110,7 +124,7 @@ export async function renderStamps(stamps, answers) {
 }
 
 /**
- * Paths a stamp writes, without rendering anything: `.hbs` files lose their extension.
+ * Paths a stamp writes, without rendering anything: `.hbs` files lose their extension, the dependency file is left out.
  * @returns {Promise<string[]>}
  */
 export async function listStampFiles(stamp) {
@@ -118,9 +132,8 @@ export async function listStampFiles(stamp) {
     return [];
   }
   const files = [];
-  for await (const file of walk(stamp.filesDir)) {
-    const relative = path.relative(stamp.filesDir, file).split(path.sep).join('/');
-    files.push(relative.endsWith(TEMPLATE_EXTENSION) ? relative.slice(0, -TEMPLATE_EXTENSION.length) : relative);
+  for await (const { output } of stampFiles(stamp)) {
+    files.push(output);
   }
   return files;
 }

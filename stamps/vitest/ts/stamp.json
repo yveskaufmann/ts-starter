@@ -1,5 +1,6 @@
 {
   "$schema": "../../../stamp.schema.json",
   "description": "Vitest configuration",
-  "mode": "inject"
+  "mode": "inject",
+  "npm": "files/package.json"
 }

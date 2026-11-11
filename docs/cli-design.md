@@ -114,7 +114,7 @@ stamps/
   app/
     ts/
       stamp.json
-      files/...          # files of this stamp only; *.hbs files are rendered with Handlebars
+      files/...          # files of this stamp only; *.hbs files and package.json are rendered with Handlebars
   editorconfig/
     ts/   stamp.json  files/.editorconfig
     go/   stamp.json  files/.editorconfig
@@ -161,7 +161,7 @@ stamps/
 | `prompts`     | array of prompt objects        | no       | Questions asked for this stamp; see below                            |
 | `includes`    | array of `"<stamp>:<variant>"` | no       | Stamps applied before this stamp's own files                         |
 | `files`       | string (default `"files"`)     | no       | Directory, relative to the manifest, holding the files of this stamp |
-| `npm`         | object                         | no       | `dependencies` / `devDependencies` (name to range) added to `package.json`; other package managers get their own key |
+| `npm`         | string                         | no       | Path of a `package.json` with only `dependencies` / `devDependencies` / `peerDependencies`, added to the target's `package.json`; other package managers get their own key |
 | `patches`     | array of `{ file, merge }`     | no       | JSON merged into a file of the target, see [Patches](#patches-and-dependencies) |
 
 A prompt object has `name` (variable name), `message`, optional `default` and optional `type` (`input` or `confirm`, default `input`).
@@ -178,8 +178,11 @@ language is needed.
 - The base is the file rendered by another stamp (e.g. `package.json` of `app:ts`), else the file in the target, else `{}`.
 - Objects are merged recursively, arrays get the missing values appended (never replaced), every other value is replaced
   by the patch value. A replaced value is reported as a hint.
-- `npm` packages are added to `package.json` sorted by name. A package that is already listed in `dependencies` or
-  `devDependencies` keeps its version and only a hint is shown.
+- `npm` packages are added to `package.json` sorted by name. A package that is already listed in `dependencies`,
+  `devDependencies` or `peerDependencies` keeps its version and only a hint is shown.
+- The packages come from the file named by `npm`, usually `files/package.json`. It is a plain `package.json` so
+  Dependabot (`stamps/**/files` in `.github/dependabot.yml`) keeps the versions up to date. Only the three dependency
+  fields are allowed, the file is read as JSON without rendering and is never written to the target.
 - Patches run after rendering, in stamp order, before the conflict check. A patch that changes nothing keeps the file
   byte for byte (`unchanged`). A target file that is only merged into is `patch` and written without asking.
 - Only JSON files, written with 2 spaces. Invalid JSON is an error before anything is written.
@@ -187,8 +190,11 @@ language is needed.
 ## File rendering
 
 - Every file below `files/` is written to the same relative path in the target directory.
-- A file ending in `.hbs` is rendered with Handlebars and written without the extension (`package.json.hbs` becomes `package.json`).
-  All other files are copied byte for byte, so binary files are safe.
+- A file ending in `.hbs` is rendered with Handlebars and written without the extension (`README.md.hbs` becomes `README.md`).
+- A file called `package.json` is rendered with Handlebars as well, without needing the extension, so the full
+  `package.json` of `app:ts` stays a valid manifest that Dependabot can update. The dependency file named by `npm` is
+  the exception: it is not rendered and not written.
+- All other files are copied byte for byte, so binary files are safe.
 - Dot-files are included. Empty directories are not created.
 - Variables are the answers to the prompts. Helpers: `dashCase`, `camelCase`, `pascalCase`, `snakeCase`, `upperCase`, `lowerCase`.
 - A missing variable is an error, not an empty string.
@@ -247,14 +253,14 @@ Choices:
 
 | Stamp             | Files                                                              |
 | ----------------- | ------------------------------------------------------------------ |
-| `app:ts`          | `package.json.hbs`, `README.md.hbs`, `Makefile`, `src/*`, `.nvmrc`, `tsconfig.json`, `.vscode/*` |
+| `app:ts`          | `package.json`, `README.md.hbs`, `Makefile`, `src/*`, `.nvmrc`, `tsconfig.json`, `.vscode/*` |
 | `editorconfig:ts` | `.editorconfig`                                                    |
 | `editorconfig:go` | `.editorconfig` (tabs for Go files)                                |
 | `biome:ts`        | `biome.json` (+ package.json and `.vscode` patches)                |
-| `vitest:ts`       | `vitest.config.ts`                                                 |
+| `vitest:ts`       | `vitest.config.ts` (+ the `vitest` dependency)                     |
 | `gitignore:node`  | `.gitignore`                                                       |
 
-`vitest:ts` writes only its own file. Their entries in `package.json` stay in `app:ts`; `biome:ts` is the first stamp that adds its package through `npm`.
+`vitest:ts` and `biome:ts` add their packages through `npm`, `app:ts` keeps the remaining entries in its `package.json`.
 The project generated by `create app:ts` must match the one generated today; the snapshot test and the CI job check this.
 
 ## Testing

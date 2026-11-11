@@ -2,11 +2,7 @@
   "$schema": "../../../stamp.schema.json",
   "description": "Biome for formatting and linting, set up as VS Code formatter (expects an .editorconfig)",
   "mode": "inject",
-  "npm": {
-    "devDependencies": {
-      "@biomejs/biome": "2.6.4"
-    }
-  },
+  "npm": "files/package.json",
   "patches": [
     {
       "file": ".vscode/extensions.json",

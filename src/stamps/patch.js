@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { StampError } from './errors.js';
 
-const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies'];
+const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'peerDependencies'];
 const LINE_WIDTH = 120;
 
 function isObject(value) {

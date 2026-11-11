@@ -24,28 +24,29 @@ describe('validateManifest', () => {
       mode: 'inject',
       prompts: [],
       includes: [],
-      npm: {},
+      npm: undefined,
       patches: [],
       files: undefined,
     });
   });
 
-  it('accepts npm packages and patches', () => {
+  it('accepts a dependency file and patches', () => {
     const manifest = {
       ...inject,
-      npm: { devDependencies: { tool: '1.0.0' } },
+      npm: 'files/package.json',
       patches: [{ file: '.vscode/settings.json', merge: { a: 1 } }],
     };
     expect(validateManifest(manifest, 'a:b')).toMatchObject({
-      npm: { devDependencies: { tool: '1.0.0' } },
+      npm: 'files/package.json',
       patches: [{ file: '.vscode/settings.json', merge: { a: 1 } }],
     });
   });
 
   it.each([
-    ['npm that is not an object', { npm: [] }, /"npm" must be an object/],
-    ['an unknown npm section', { npm: { peerDependencies: {} } }, /can only have/],
-    ['a version that is not a string', { npm: { devDependencies: { tool: 1 } } }, /version ranges/],
+    ['npm with inline packages', { npm: { devDependencies: {} } }, /"npm" must be the path of a package\.json/],
+    ['npm with an empty path', { npm: '' }, /"npm" must be the path/],
+    ['npm leaving the stamp', { npm: '../package.json' }, /"npm" must be a file inside the stamp/],
+    ['npm naming another file', { npm: 'files/deps.json' }, /called package\.json/],
     ['patches that are not an array', { patches: {} }, /"patches" must be an array/],
     ['a patch without merge', { patches: [{ file: 'a.json' }] }, /merge must be an object/],
     ['a patch outside of the target', { patches: [{ file: '../a.json', merge: {} }] }, /inside the target/],
@@ -152,6 +153,37 @@ describe('loadRegistry', () => {
       'b:x': { manifest: { ...inject, includes: ['a:x'] } },
     });
     await expect(loadRegistry(stamps)).rejects.toThrow('a:x -> b:x -> a:x');
+  });
+});
+
+describe('dependency files', () => {
+  const tool = { ...inject, npm: 'files/package.json' };
+
+  it('reads the dependencies from the file named by npm', async () => {
+    const deps = { dependencies: { a: '1.0.0' }, devDependencies: { b: '^2' }, peerDependencies: { c: '>=3' } };
+    const registry = await loadRegistry(
+      await makeStamps({ 'tool:ts': { manifest: tool, files: { 'package.json': JSON.stringify(deps) } } }),
+    );
+
+    expect(registry.get('tool', 'ts')).toMatchObject({ npm: deps, npmFile: expect.stringMatching(/package\.json$/) });
+  });
+
+  it('has no dependencies without npm', async () => {
+    const registry = await loadRegistry(await makeStamps({ 'a:b': { manifest: inject } }));
+
+    expect(registry.get('a', 'b').npm).toEqual({});
+    expect(registry.get('a', 'b').npmFile).toBeUndefined();
+  });
+
+  it.each([
+    ['a missing file', undefined, /dependency file files\/package\.json: the file is missing/],
+    ['invalid JSON', '{ nope', /cannot read the dependency file/],
+    ['a non object', '[]', /must contain an object/],
+    ['another field', '{ "name": "x" }', /can only have dependencies, devDependencies, peerDependencies, found "name"/],
+    ['a version that is not a string', '{ "devDependencies": { "b": 1 } }', /version ranges/],
+  ])('rejects %s', async (_label, content, message) => {
+    const files = content === undefined ? {} : { 'package.json': content };
+    await expect(loadRegistry(await makeStamps({ 'tool:ts': { manifest: tool, files } }))).rejects.toThrow(message);
   });
 });
 
