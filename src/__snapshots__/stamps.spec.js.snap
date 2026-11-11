@@ -67,7 +67,7 @@ logs
 dist
 build/
 ",
-  ".nvmrc": "lts/krypton
+  ".nvmrc": "lts/lithium
 ",
   ".vscode/extensions.json": "{
   "recommendations": ["biomejs.biome", "editorconfig.editorconfig"]
