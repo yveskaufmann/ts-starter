@@ -42,6 +42,8 @@ src/
   lib/query-client.ts  TanStack Query settings
   stores/              global client state (Pinia), e.g. the theme
   styles/app.css       Tailwind and the design tokens (@theme)
+  assets/images/       images used by the code or the CSS
+  assets/fonts/        self hosted fonts (.woff2)
   config.ts            settings that are the same in every environment
 ```
 
@@ -53,6 +55,21 @@ Rules of thumb:
 - Pinia stores hold state that only exists in the browser: theme, open dialogs, form drafts.
 - Code that only one feature uses stays in that feature. Move it to `components/` or `lib/` once a second one needs it.
 - `@/` is an alias for `src/`.
+
+## Assets
+
+There are two places for static files. Pick by how the file is used:
+
+- **`src/assets/`** for everything the code or the CSS uses: `images/` (logos, illustrations, SVG icons) and `fonts/`
+  (self hosted `.woff2`). Import them, e.g. `import logo from '@/assets/images/logo.svg'`, or use `url(...)` in CSS.
+  The build adds a hash to the file name, so browsers can cache them forever, inlines small files and fails if a file
+  is missing.
+- **`public/`** only for files that need a fixed URL or are never referenced by the code: `favicon.svg`, `robots.txt`,
+  social media preview images, `manifest.webmanifest`. They are copied as they are, without hash and without checks,
+  and are referenced with an absolute path like `/favicon.svg`.
+
+A self hosted font is wired up in `src/styles/app.css` (commented out): add the file, uncomment the `@font-face` and
+set `--font-sans` in `@theme`.
 
 ## Configuration
 

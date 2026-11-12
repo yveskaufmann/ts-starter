@@ -402,6 +402,8 @@ exports[`shipped stamps > renders the spa:vue project 1`] = `
   "package.json",
   "public/favicon.svg",
   "src/App.vue",
+  "src/assets/fonts/.gitkeep",
+  "src/assets/images/.gitkeep",
   "src/components/layout/AppLayout.vue",
   "src/components/ui/BaseButton.spec.ts",
   "src/components/ui/BaseButton.vue",
