@@ -349,6 +349,8 @@ exports[`shipped stamps > renders the spa:react project 1`] = `
   "index.html",
   "package.json",
   "public/favicon.svg",
+  "src/assets/fonts/.gitkeep",
+  "src/assets/images/.gitkeep",
   "src/components/layout/app-layout.tsx",
   "src/components/layout/not-found.tsx",
   "src/components/ui/button.spec.tsx",
