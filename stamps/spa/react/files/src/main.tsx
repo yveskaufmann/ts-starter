@@ -1,9 +1,8 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { queryClient } from '@/lib/query-client';
+import { AppProviders } from '@/providers';
 import { router } from '@/router';
 import '@/styles/app.css';
 
@@ -14,8 +13,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <AppProviders>
       <RouterProvider router={router} />
-    </QueryClientProvider>
+    </AppProviders>
   </StrictMode>,
 );

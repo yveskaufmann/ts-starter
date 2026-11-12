@@ -25,13 +25,15 @@ Before you finish a change, `npm run check` and `npm test` must pass.
 
 ```
 src/
-  main.tsx              entry point, mounts the providers and the router
+  main.tsx              entry point, renders AppProviders and the router
+  providers.tsx         AppProviders: all app wide React providers (TanStack Query, ...)
   router.tsx            creates the router from routeTree.gen.ts
   routes/               pages, one file per URL (file based routing)
   routeTree.gen.ts      GENERATED from src/routes, never edit it
   features/<feature>/   one vertical slice per topic, see below
   components/ui/        shared, generic building blocks (Button, Card), no feature logic
   components/layout/    the app frame: header, navigation, footer, 404
+  hooks/                shared React hooks used by several features (use-*.ts)
   lib/                  shared infrastructure: api-client.ts (fetch wrapper), query-client.ts
   stores/               global client state used by many features (theme)
   assets/images|fonts/  images and fonts imported by code or CSS
@@ -50,6 +52,7 @@ deleted in one place:
 features/<feature>/
   api/          queryOptions, useQuery/useMutation hooks and the request functions (via lib/api-client)
   components/   components of this feature, with their *.spec.tsx next to them
+  hooks/        React hooks of this feature that are neither data fetching nor a store (use-*.ts)
   stores/       Zustand stores only this feature uses
   types.ts      types of this feature (optional)
 ```
@@ -68,6 +71,16 @@ features/<feature>/
   `@/lib/api-client`. Paths are relative to `/api`. See `features/health/api/get-health.ts`.
 - **Server data** always goes through TanStack Query, never into a Zustand store.
 - **Client state** (UI state, drafts): a Zustand store in the feature, or in `src/stores` if it is global.
+- **Hook:** where it lives depends on what it does, a hook is never part of a store file unless it is the store itself.
+  - Fetches or changes server data: `features/<feature>/api/` (`useHealth` next to its `queryOptions`).
+  - Reads client state: the store is the hook (`useCounterStore` in `stores/`), select what you need from it.
+  - Other logic of one feature (form handling, keyboard shortcuts, derived values): `features/<feature>/hooks/`.
+  - Generic and used by several features (`useDebounce`, `useMediaQuery`): `src/hooks/`.
+- **Provider:** prefer a Zustand store or TanStack Query over a React context. If a provider is needed:
+  - App wide (i18n, feature flags, auth later): add it to `AppProviders` in `src/providers.tsx`, then it is active in
+    the app and in the tests.
+  - Only for one feature or one part of the page: `features/<feature>/components/<name>-provider.tsx` with its
+    `use<Name>` hook in the same file, rendered around that part of the tree.
 - **Shared component:** `src/components/ui`, styled with Tailwind classes, no data fetching.
 - **Styling:** Tailwind utility classes in the markup; new colors or fonts as tokens in `@theme` in `styles/app.css`.
 
