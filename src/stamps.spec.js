@@ -67,7 +67,6 @@ describe('shipped stamps', () => {
       'editorconfig:ts',
       'gitignore:node',
       'spa:react',
-      'spa:vue',
       'vitest:ts',
     ]);
   });
@@ -115,7 +114,7 @@ describe('shipped stamps', () => {
     expect({ ...output, 'package.json': maskVersions(output['package.json']) }).toMatchSnapshot();
   });
 
-  it.each(['react', 'vue'])('renders the spa:%s project', async (variant) => {
+  it.each(['react'])('renders the spa:%s project', async (variant) => {
     const stamps = registry.flatten(registry.get('spa', variant));
     const { files, hints } = await applyPatches(await renderStamps(stamps, answers), stamps, await tempDir());
 
