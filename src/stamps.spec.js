@@ -66,6 +66,8 @@ describe('shipped stamps', () => {
       'editorconfig:go',
       'editorconfig:ts',
       'gitignore:node',
+      'spa:react',
+      'spa:vue',
       'vitest:ts',
     ]);
   });
@@ -111,6 +113,38 @@ describe('shipped stamps', () => {
       }
     }
     expect({ ...output, 'package.json': maskVersions(output['package.json']) }).toMatchSnapshot();
+  });
+
+  it.each(['react', 'vue'])('renders the spa:%s project', async (variant) => {
+    const stamps = registry.flatten(registry.get('spa', variant));
+    const { files, hints } = await applyPatches(await renderStamps(stamps, answers), stamps, await tempDir());
+
+    const output = Object.fromEntries(files.map((file) => [file.path, file.content.toString()]));
+    const manifest = JSON.parse(output['package.json']);
+    const versions = await declaredVersions(stamps);
+    const biome = JSON.parse(output['biome.json']);
+
+    expect(hints).toEqual([]);
+    expect(stamps.map((stamp) => stamp.id)).toEqual([
+      'editorconfig:ts',
+      'vitest:ts',
+      'biome:ts',
+      'gitignore:node',
+      `spa:${variant}`,
+    ]);
+    for (const section of DEPENDENCY_SECTIONS) {
+      for (const [name, version] of Object.entries(manifest[section] ?? {})) {
+        expect(version, name).toBe(versions[name]);
+      }
+    }
+    expect(manifest.name).toBe('demo-app');
+    expect(Object.keys(manifest.scripts)).toEqual(expect.arrayContaining(['dev', 'build', 'preview', 'test', 'check']));
+    expect(output['index.html']).toContain('<title>Demo App</title>');
+    expect(output['src/config.ts']).toContain("export const APP_NAME = 'Demo App';");
+    // The spa stamp replaces the node test setup of vitest:ts with one that uses the Vite config
+    expect(output['vitest.config.ts']).toContain("environment: 'jsdom'");
+    expect(biome.css.parser.tailwindDirectives).toBe(true);
+    expect(Object.keys(output).sort()).toMatchSnapshot();
   });
 
   it('uses tabs for go files and spaces for typescript projects', async () => {

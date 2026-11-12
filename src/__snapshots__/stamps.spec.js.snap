@@ -12,7 +12,7 @@ charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 
-[*.{js,json,ts}]
+[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,jsonc,css,html,vue}]
 trim_trailing_whitespace = true
 tab_width = 2
 indent_size = 2
@@ -334,4 +334,101 @@ export default defineConfig({
 });
 ",
 }
+`;
+
+exports[`shipped stamps > renders the spa:react project 1`] = `
+[
+  ".editorconfig",
+  ".env.example",
+  ".gitignore",
+  ".nvmrc",
+  ".vscode/extensions.json",
+  ".vscode/settings.json",
+  "README.md",
+  "biome.json",
+  "index.html",
+  "package.json",
+  "public/favicon.svg",
+  "src/components/layout/app-layout.tsx",
+  "src/components/layout/not-found.tsx",
+  "src/components/ui/button.spec.tsx",
+  "src/components/ui/button.tsx",
+  "src/components/ui/card.tsx",
+  "src/config.ts",
+  "src/features/counter/components/counter.spec.tsx",
+  "src/features/counter/components/counter.tsx",
+  "src/features/counter/stores/counter-store.spec.ts",
+  "src/features/counter/stores/counter-store.ts",
+  "src/features/health/api/get-health.ts",
+  "src/features/health/components/health-status.spec.tsx",
+  "src/features/health/components/health-status.tsx",
+  "src/lib/api-client.spec.ts",
+  "src/lib/api-client.ts",
+  "src/lib/query-client.ts",
+  "src/main.tsx",
+  "src/routeTree.gen.ts",
+  "src/router.spec.tsx",
+  "src/router.tsx",
+  "src/routes/__root.tsx",
+  "src/routes/about.tsx",
+  "src/routes/index.tsx",
+  "src/routes/items/$itemId.tsx",
+  "src/routes/items/-data.ts",
+  "src/routes/items/index.tsx",
+  "src/stores/theme-store.ts",
+  "src/styles/app.css",
+  "src/test/render.tsx",
+  "src/test/setup.ts",
+  "src/vite-env.d.ts",
+  "tsconfig.json",
+  "vite.config.ts",
+  "vitest.config.ts",
+]
+`;
+
+exports[`shipped stamps > renders the spa:vue project 1`] = `
+[
+  ".editorconfig",
+  ".env.example",
+  ".gitignore",
+  ".nvmrc",
+  ".vscode/extensions.json",
+  ".vscode/settings.json",
+  "README.md",
+  "biome.json",
+  "index.html",
+  "package.json",
+  "public/favicon.svg",
+  "src/App.vue",
+  "src/components/layout/AppLayout.vue",
+  "src/components/ui/BaseButton.spec.ts",
+  "src/components/ui/BaseButton.vue",
+  "src/components/ui/BaseCard.vue",
+  "src/config.ts",
+  "src/features/counter/components/CounterCard.vue",
+  "src/features/counter/stores/counter.spec.ts",
+  "src/features/counter/stores/counter.ts",
+  "src/features/health/api/health.ts",
+  "src/features/health/components/HealthStatus.spec.ts",
+  "src/features/health/components/HealthStatus.vue",
+  "src/lib/api-client.spec.ts",
+  "src/lib/api-client.ts",
+  "src/lib/query-client.ts",
+  "src/main.ts",
+  "src/pages/AboutPage.vue",
+  "src/pages/HomePage.vue",
+  "src/pages/NotFoundPage.vue",
+  "src/pages/items/ItemPage.vue",
+  "src/pages/items/ItemsPage.vue",
+  "src/pages/items/items.ts",
+  "src/router/index.ts",
+  "src/router/router.spec.ts",
+  "src/stores/theme.ts",
+  "src/styles/app.css",
+  "src/test/setup.ts",
+  "src/vite-env.d.ts",
+  "tsconfig.json",
+  "vite.config.ts",
+  "vitest.config.ts",
+]
 `;

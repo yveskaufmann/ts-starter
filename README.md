@@ -171,6 +171,8 @@ ts-starter list
 | Stamp             | Mode      | Writes                                                                                             |
 | ----------------- | --------- | -------------------------------------------------------------------------------------------------- |
 | `app:ts`          | `project` | A TypeScript app: `package.json`, `README.md`, `Makefile`, `.nvmrc`, `tsconfig.json`, `.vscode/`, `src/`, plus the stamps below |
+| `spa:react`       | `project` | A React single page app: Vite, TanStack Router and Query, Zustand, Tailwind CSS, plus the stamps below |
+| `spa:vue`         | `project` | A Vue single page app: Vite, Vue Router, Pinia, TanStack Query, Tailwind CSS, plus the stamps below |
 | `editorconfig:ts` | `inject`  | `.editorconfig` for TypeScript and JavaScript                                                      |
 | `editorconfig:go` | `inject`  | `.editorconfig` for Go (tabs)                                                                      |
 | `biome:ts`        | `inject`  | `biome.json`, the `@biomejs/biome` dependency and the Biome settings in `.vscode/`                 |
@@ -181,6 +183,20 @@ ts-starter list
 
 The generated TypeScript project uses [Vitest](https://vitest.dev) for the tests, [tsx](https://tsx.is) to run the code,
 [Biome](https://biomejs.dev) for formatting and linting and a `Makefile` with the targets `build`, `test`, `start`, `clean` and `help`.
+
+### Single page apps
+
+`spa:react` and `spa:vue` create a frontend that builds into static files (`index.html` plus JavaScript and CSS) for
+any backend. Both come with routing (a layout, pages, a route with a parameter, a 404 page), Tailwind CSS, a store for
+client state, TanStack Query with a small `fetch` client for the API, and tests with Vitest. The dev server works behind
+the reverse proxy of a backend (Go, Node, ...) including hot reload, port, base path and output directory are set in
+`.env.local`. The README of the generated project explains the structure and shows the Go code for the proxy and the
+SPA fallback.
+
+```bash
+ts-starter create spa:react my-frontend
+cd my-frontend && npm install && npm run dev
+```
 
 ## Development
 

@@ -1,0 +1,131 @@
+# {{name}}
+
+{{description}}
+
+A single page application (SPA) built with [Vite](https://vite.dev), [React](https://react.dev),
+[TanStack Router](https://tanstack.com/router) and [TanStack Query](https://tanstack.com/query),
+[Zustand](https://zustand.docs.pmnd.rs) and [Tailwind CSS](https://tailwindcss.com). The build is a folder with
+`index.html` plus JavaScript and CSS that any backend can serve.
+
+## Commands
+
+```bash
+npm install
+npm run dev         # dev server with hot reload on http://localhost:5173
+npm run build       # type check and build into dist/
+npm run preview     # serve the build locally
+npm test            # vitest, `npm run test:watch` while working
+npm run check       # format, lint (biome) and type check
+```
+
+## Structure
+
+```
+src/
+  main.tsx             entry point: providers and router
+  router.tsx           the router, uses the routes in src/routes
+  routes/              one file per page (file based routing)
+    __root.tsx         layout of all pages, the 404 page
+    index.tsx          /
+    about.tsx          /about
+    items/index.tsx    /items
+    items/$itemId.tsx  /items/:itemId, a route with a parameter and a loader
+  routeTree.gen.ts     generated from src/routes by the Vite plugin, do not edit
+  components/
+    ui/                small reusable building blocks (Button, Card)
+    layout/            the frame of the pages: header, navigation, footer
+  features/<feature>/  everything of one topic: api/, components/, stores/
+  lib/api-client.ts    fetch wrapper for the backend API
+  lib/query-client.ts  TanStack Query settings
+  stores/              global client state (Zustand), e.g. the theme
+  styles/app.css       Tailwind and the design tokens (@theme)
+  test/                test setup and render helpers
+  config.ts            settings that are the same in every environment
+```
+
+Rules of thumb:
+
+- A new page is a new file in `src/routes`. Files starting with `-` there are not routes.
+- Data from the backend goes through TanStack Query (see `features/health/api`), not into a store. It takes care of
+  loading, caching, errors and refetching.
+- Zustand stores hold state that only exists in the browser: theme, open dialogs, form drafts.
+- Code that only one feature uses stays in that feature. Move it to `components/` or `lib/` once a second one needs it.
+- `@/` is an alias for `src/`.
+
+## Tests
+
+Unit and component tests run with [Vitest](https://vitest.dev) in a simulated browser (jsdom), components are tested
+with [Testing Library](https://testing-library.com/docs/react-testing-library/intro). Tests are `*.spec.ts(x)` files
+next to the code. `npm run test:watch` reruns the affected tests on save.
+
+| What                        | How                                                              | Example                                 |
+| --------------------------- | ---------------------------------------------------------------- | --------------------------------------- |
+| Plain functions and stores  | Call them and check the result, reset stores in `beforeEach`     | `features/counter/stores/*.spec.ts`     |
+| Component without providers | `render()` from Testing Library                                  | `components/ui/button.spec.tsx`         |
+| Component that uses the API | `renderWithProviders()` from `src/test/render.tsx`, stub `fetch` | `features/health/components/*.spec.tsx` |
+| A page with routing         | `renderRoute('/path')` from `src/test/render.tsx`                | `router.spec.tsx`                       |
+
+- Find elements like a user does: `screen.getByRole('button', { name: 'Save' })`, `findBy...` waits for async content.
+- Interact with the returned `user` (`await user.click(...)`, `await user.type(...)`), it behaves like a real user.
+- No backend in tests: replace `fetch` with `vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(...)))`.
+- Matchers like `toBeInTheDocument()` come from jest-dom, set up in `src/test/setup.ts`.
+
+## Configuration
+
+Copy `.env.example` to `.env.local` and change what you need. `.env.local` is not committed.
+
+| Variable            | Default     | Purpose                                                        |
+| ------------------- | ----------- | -------------------------------------------------------------- |
+| `DEV_PORT`          | `5173`      | Port of the dev server and of `npm run preview`                |
+| `DEV_HOST`          | `localhost` | Interface of the dev server, `0.0.0.0` in a container          |
+| `BASE_PATH`         | `/`         | Path the app is served under, e.g. `/app/`                     |
+| `OUT_DIR`           | `dist`      | Output of `npm run build`, e.g. `../server/web/dist`           |
+| `API_PROXY_TARGET`  |             | Forward `/api` of the dev server to this backend               |
+| `HMR_CLIENT_PORT`   |             | Port the browser uses for hot reload, see below                |
+| `DEV_ORIGIN`        |             | Absolute URL of the dev server for asset URLs, see below       |
+| `VITE_API_BASE_URL` | `/api`      | Base URL of the API as the browser sees it (part of the build) |
+
+## Run it behind a backend
+
+There are two ways to develop against a backend. Pick one.
+
+**1. The backend proxies to Vite (recommended).** Open the backend, e.g. `http://localhost:8080`. It answers `/api` and
+forwards every other request, including the hot reload websocket, to the Vite dev server. The browser sees one origin,
+so there is no CORS and cookies work like in production. In Go:
+
+```go
+vite, _ := url.Parse("http://localhost:5173")
+mux.Handle("/api/", apiHandler)
+mux.Handle("/", httputil.NewSingleHostReverseProxy(vite)) // also forwards websockets
+```
+
+With a `BASE_PATH` like `/app/` forward `/app/` to Vite without removing the prefix. If hot reload does not connect
+because the proxy does not forward websockets, set `HMR_CLIENT_PORT=5173` so the browser connects to Vite directly.
+`DEV_ORIGIN` is only needed when the backend renders its own HTML and includes the Vite scripts.
+
+**2. Vite proxies to the backend.** Open `http://localhost:5173` and set `API_PROXY_TARGET=http://localhost:8080`, Vite
+then forwards `/api` to the backend.
+
+## Deploy
+
+`npm run build` writes static files to `dist/` (or `OUT_DIR`). Serve them with any web server or embed them into the
+backend. Because the router runs in the browser, every path that is not a file must answer with `index.html` (SPA
+fallback), so that reloading `/items/1` works. In Go:
+
+```go
+//go:embed all:dist
+var dist embed.FS
+
+func spa() http.Handler {
+	files, _ := fs.Sub(dist, "dist")
+	fileServer := http.FileServerFS(files)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, err := fs.Stat(files, strings.TrimPrefix(path.Clean(r.URL.Path), "/")); err != nil {
+			r.URL.Path = "/" // unknown path: serve index.html, the router shows the page or its 404
+		}
+		fileServer.ServeHTTP(w, r)
+	})
+}
+```
+
+Files in `dist/assets/` have a hash in their name and can be cached forever, `index.html` should not be cached.
