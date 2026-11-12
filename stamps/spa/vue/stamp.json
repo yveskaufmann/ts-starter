@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../stamp.schema.json",
+  "description": "Vue single page app with Vite, Vue Router, Pinia, TanStack Query, Tailwind CSS, Vitest and Biome",
+  "mode": "project",
+  "prompts": [
+    {
+      "name": "name",
+      "message": "What is the project name?"
+    },
+    {
+      "name": "description",
+      "message": "Project description:",
+      "default": "A Vue single page application"
+    },
+    {
+      "name": "author",
+      "message": "Author name:",
+      "default": "Yves Kaufmann <yv35kaufmann@gmail.com>"
+    }
+  ],
+  "includes": ["editorconfig:ts", "vitest:ts", "biome:ts", "gitignore:web"],
+  "patches": [
+    {
+      "file": "biome.json",
+      "merge": {
+        "css": {
+          "parser": {
+            "tailwindDirectives": true
+          }
+        },
+        "html": {
+          "experimentalFullSupportEnabled": true
+        }
+      }
+    },
+    {
+      "file": ".vscode/extensions.json",
+      "merge": {
+        "recommendations": ["Vue.volar", "bradlc.vscode-tailwindcss"]
+      }
+    },
+    {
+      "file": ".vscode/settings.json",
+      "merge": {
+        "css.lint.unknownAtRules": "ignore",
+        "[vue]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        }
+      }
+    }
+  ]
+}
