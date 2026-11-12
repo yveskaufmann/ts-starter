@@ -172,7 +172,6 @@ ts-starter list
 | ----------------- | --------- | -------------------------------------------------------------------------------------------------- |
 | `app:ts`          | `project` | A TypeScript app: `package.json`, `README.md`, `Makefile`, `.nvmrc`, `tsconfig.json`, `.vscode/`, `src/`, plus the stamps below |
 | `spa:react`       | `project` | A React single page app: Vite, TanStack Router and Query, Zustand, Tailwind CSS, plus the stamps below |
-| `spa:vue`         | `project` | A Vue single page app: Vite, Vue Router, Pinia, TanStack Query, Tailwind CSS, plus the stamps below |
 | `editorconfig:ts` | `inject`  | `.editorconfig` for TypeScript and JavaScript                                                      |
 | `editorconfig:go` | `inject`  | `.editorconfig` for Go (tabs)                                                                      |
 | `biome:ts`        | `inject`  | `biome.json`, the `@biomejs/biome` dependency and the Biome settings in `.vscode/`                 |
@@ -186,8 +185,8 @@ The generated TypeScript project uses [Vitest](https://vitest.dev) for the tests
 
 ### Single page apps
 
-`spa:react` and `spa:vue` create a frontend that builds into static files (`index.html` plus JavaScript and CSS) for
-any backend. Both come with routing (a layout, pages, a route with a parameter, a 404 page), Tailwind CSS, a store for
+`spa:react` creates a frontend that builds into static files (`index.html` plus JavaScript and CSS) for any backend. It
+comes with routing (a layout, pages, a route with a parameter, a 404 page), Tailwind CSS, a store for
 client state, TanStack Query with a small `fetch` client for the API, and tests with Vitest. The dev server works behind
 the reverse proxy of a backend (Go, Node, ...) including hot reload, port, base path and output directory are set in
 `.env.local`. The README of the generated project explains the structure and shows the Go code for the proxy and the

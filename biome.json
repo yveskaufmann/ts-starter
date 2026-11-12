@@ -13,7 +13,6 @@
   },
   "linter": { "enabled": true, "rules": { "preset": "recommended" } },
   "css": { "parser": { "tailwindDirectives": true } },
-  "html": { "experimentalFullSupportEnabled": true },
   "javascript": {
     "formatter": {
       "quoteStyle": "single"
