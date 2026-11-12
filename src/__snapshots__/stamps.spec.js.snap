@@ -398,6 +398,8 @@ exports[`shipped stamps > renders the spa:vue project 1`] = `
   ".nvmrc",
   ".vscode/extensions.json",
   ".vscode/settings.json",
+  "AGENTS.md",
+  "CLAUDE.md",
   "README.md",
   "biome.json",
   "index.html",

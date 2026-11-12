@@ -1,0 +1,82 @@
+# AGENTS.md
+
+{{name}}: a Vue single page app (SPA). `npm run build` turns it into static files (`index.html` plus JS and CSS in
+`dist/`) that a separate backend serves. There is no server code in this repository, the backend API is reached under
+`/api`.
+
+Stack: Vite, Vue 3 (`<script setup lang="ts">`), TypeScript, Vue Router, TanStack Query (server data), Pinia (client
+state), Tailwind CSS v4, Vitest with Vue Test Utils, Biome.
+
+## Commands
+
+```bash
+npm install
+npm run dev          # dev server on http://localhost:5173 with hot reload
+npm run build        # type check (vue-tsc) and production build into dist/
+npm test             # all unit and component tests once
+npm run test:watch   # tests in watch mode
+npm run typecheck    # vue-tsc only
+npm run check        # biome format + lint with fixes, then vue-tsc
+```
+
+Before you finish a change, `npm run check` and `npm test` must pass.
+
+## Where things are
+
+```
+src/
+  main.ts               entry point, installs Pinia, the router and TanStack Query
+  App.vue               the layout around the current page
+  router/index.ts       the list of routes, the only place that maps URLs to pages
+  pages/                one component per page, referenced by router/index.ts
+  features/<feature>/   one vertical slice per topic, see below
+  components/ui/        shared, generic building blocks (BaseButton, BaseCard), no feature logic
+  components/layout/    the app frame: header, navigation, footer
+  lib/                  shared infrastructure: api-client.ts (fetch wrapper), query-client.ts
+  stores/               global client state used by many features (theme)
+  assets/images|fonts/  images and fonts imported by code or CSS
+  styles/app.css        Tailwind entry, design tokens in @theme
+  test/                 test setup
+  config.ts             constants that are the same in every environment
+public/                 files served as they are under a fixed URL (favicon, robots.txt)
+```
+
+## Features (vertical slices)
+
+Everything that belongs to one topic lives in `src/features/<feature>/`, so a feature can be understood, changed and
+deleted in one place:
+
+```
+features/<feature>/
+  api/          queryOptions, useQuery/useMutation composables and the request functions (via lib/api-client)
+  components/   components of this feature, with their *.spec.ts next to them
+  stores/       Pinia stores only this feature uses
+  types.ts      types of this feature (optional)
+```
+
+- Only create the subfolders a feature needs.
+- A feature may import from `components/`, `lib/`, `stores/` and `config.ts`, but not from another feature. If two
+  features need the same code, move it to `components/` or `lib/`.
+- Pages stay thin: a page in `src/pages` receives route params as props and renders feature components.
+
+## How to add things
+
+- **Page:** add a component in `src/pages` (e.g. `src/pages/orders/OrderPage.vue`) and a route in
+  `src/router/index.ts`, lazy loaded with `component: () => import(...)`. Use `props: true` to get params as props.
+- **API call:** add `features/<feature>/api/<name>.ts` with `queryOptions` and a composable, using `api.get/post/...`
+  from `@/lib/api-client`. Paths are relative to `/api`. See `features/health/api/health.ts`.
+- **Server data** always goes through TanStack Query, never into a Pinia store.
+- **Client state** (UI state, drafts): a Pinia setup store in the feature, or in `src/stores` if it is global.
+- **Shared component:** `src/components/ui`, styled with Tailwind classes, no data fetching.
+- **Styling:** Tailwind utility classes in the template; new colors or fonts as tokens in `@theme` in `styles/app.css`.
+
+## Conventions
+
+- Imports use the `@/` alias for `src/`.
+- Components are single file components named in PascalCase (`HealthStatus.vue`), other files in camelCase or
+  kebab-case.
+- Tests are `*.spec.ts` next to the code. Mount with `mount()` from `@vue/test-utils` and pass the needed plugins
+  (Pinia, router, `VueQueryPlugin`) via `global.plugins`, see `router/router.spec.ts`. Stub `fetch` instead of calling a
+  backend.
+- Environment settings are in `.env.example` (copy to `.env.local`). Only `VITE_*` variables reach the browser.
+- TypeScript stays on version 6 until `vue-tsc` supports TypeScript 7.
