@@ -177,6 +177,7 @@ ts-starter list
 | `biome:ts`        | `inject`  | `biome.json`, the `@biomejs/biome` dependency and the Biome settings in `.vscode/`                 |
 | `vitest:ts`       | `inject`  | `vitest.config.ts` and the `vitest` dependency                                                     |
 | `gitignore:node`  | `inject`  | `.gitignore`                                                                                       |
+| `gitignore:web`   | `inject`  | `.gitignore` for Vite frontends: build output, caches, local env files                             |
 
 `ts-starter info app:ts` shows the values a stamp asks for, the stamps it includes and the files it writes.
 
