@@ -344,6 +344,8 @@ exports[`shipped stamps > renders the spa:react project 1`] = `
   ".nvmrc",
   ".vscode/extensions.json",
   ".vscode/settings.json",
+  "AGENTS.md",
+  "CLAUDE.md",
   "README.md",
   "biome.json",
   "index.html",
