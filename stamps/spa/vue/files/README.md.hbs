@@ -25,7 +25,8 @@ Biome checks `.vue` files with its still experimental full HTML support (`html.e
 
 ```
 src/
-  main.ts              entry point: plugins (router, Pinia, TanStack Query)
+  main.ts              entry point, installs the plugins
+  plugins.ts           app wide plugins (Pinia, router, TanStack Query)
   App.vue              the layout around the current page
   router/index.ts      the list of routes
   pages/               one component per page
@@ -37,7 +38,8 @@ src/
   components/
     ui/                small reusable building blocks (BaseButton, BaseCard)
     layout/            the frame of the pages: header, navigation, footer
-  features/<feature>/  everything of one topic: api/, components/, stores/
+  features/<feature>/  everything of one topic: api/, components/, composables/, stores/
+  composables/         shared composables
   lib/api-client.ts    fetch wrapper for the backend API
   lib/query-client.ts  TanStack Query settings
   stores/              global client state (Pinia), e.g. the theme

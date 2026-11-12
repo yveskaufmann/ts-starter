@@ -25,18 +25,20 @@ Before you finish a change, `npm run check` and `npm test` must pass.
 
 ```
 src/
-  main.ts               entry point, installs Pinia, the router and TanStack Query
+  main.ts               entry point, creates the app and installs appPlugins
+  plugins.ts            appPlugins: all app wide plugins (Pinia, router, TanStack Query, ...)
   App.vue               the layout around the current page
   router/index.ts       the list of routes, the only place that maps URLs to pages
   pages/                one component per page, referenced by router/index.ts
   features/<feature>/   one vertical slice per topic, see below
   components/ui/        shared, generic building blocks (BaseButton, BaseCard), no feature logic
   components/layout/    the app frame: header, navigation, footer
+  composables/          shared composables used by several features (use*.ts)
   lib/                  shared infrastructure: api-client.ts (fetch wrapper), query-client.ts
   stores/               global client state used by many features (theme)
   assets/images|fonts/  images and fonts imported by code or CSS
   styles/app.css        Tailwind entry, design tokens in @theme
-  test/                 test setup
+  test/                 test setup and mount helpers
   config.ts             constants that are the same in every environment
 public/                 files served as they are under a fixed URL (favicon, robots.txt)
 ```
@@ -50,6 +52,7 @@ deleted in one place:
 features/<feature>/
   api/          queryOptions, useQuery/useMutation composables and the request functions (via lib/api-client)
   components/   components of this feature, with their *.spec.ts next to them
+  composables/  composables of this feature that are neither data fetching nor a store (use*.ts)
   stores/       Pinia stores only this feature uses
   types.ts      types of this feature (optional)
 ```
@@ -67,6 +70,17 @@ features/<feature>/
   from `@/lib/api-client`. Paths are relative to `/api`. See `features/health/api/health.ts`.
 - **Server data** always goes through TanStack Query, never into a Pinia store.
 - **Client state** (UI state, drafts): a Pinia setup store in the feature, or in `src/stores` if it is global.
+- **Composable** (the Vue word for a hook): where it lives depends on what it does, it is never part of a store file
+  unless it is the store itself.
+  - Fetches or changes server data: `features/<feature>/api/` (`useHealth` next to its `queryOptions`).
+  - Reads client state: the store is the composable (`useCounterStore` in `stores/`), use `storeToRefs` to destructure.
+  - Other logic of one feature (form handling, keyboard shortcuts, derived values): `features/<feature>/composables/`.
+  - Generic and used by several features (`useDebounce`, `useMediaQuery`): `src/composables/`.
+- **Plugin / provider:** prefer a Pinia store or TanStack Query over provide/inject.
+  - App wide (i18n, feature flags, auth later): add it to `appPlugins` in `src/plugins.ts`, then it is active in the
+    app and in the tests.
+  - Only for one feature or one part of the page: `provide()` in the root component of that part and a
+    `use<Name>()` composable with `inject()` in `features/<feature>/composables/`.
 - **Shared component:** `src/components/ui`, styled with Tailwind classes, no data fetching.
 - **Styling:** Tailwind utility classes in the template; new colors or fonts as tokens in `@theme` in `styles/app.css`.
 
@@ -75,8 +89,7 @@ features/<feature>/
 - Imports use the `@/` alias for `src/`.
 - Components are single file components named in PascalCase (`HealthStatus.vue`), other files in camelCase or
   kebab-case.
-- Tests are `*.spec.ts` next to the code. Mount with `mount()` from `@vue/test-utils` and pass the needed plugins
-  (Pinia, router, `VueQueryPlugin`) via `global.plugins`, see `router/router.spec.ts`. Stub `fetch` instead of calling a
-  backend.
+- Tests are `*.spec.ts` next to the code. Use `mountWithPlugins` and `mountRoute` from `src/test/mount.ts` (plain
+  `mount()` for components without plugins), stub `fetch` instead of calling a backend.
 - Environment settings are in `.env.example` (copy to `.env.local`). Only `VITE_*` variables reach the browser.
 - TypeScript stays on version 6 until `vue-tsc` supports TypeScript 7.

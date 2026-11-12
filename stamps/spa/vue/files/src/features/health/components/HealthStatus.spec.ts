@@ -1,13 +1,9 @@
-import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import HealthStatus from './HealthStatus.vue';
+import { mountWithPlugins } from '@/test/mount';
 
-function mountWithQuery() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return mount(HealthStatus, { global: { plugins: [[VueQueryPlugin, { queryClient }]] } });
-}
+import HealthStatus from './HealthStatus.vue';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -17,7 +13,7 @@ describe('HealthStatus', () => {
   it('shows the status of the backend', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ status: 'ok' })));
 
-    const wrapper = mountWithQuery();
+    const wrapper = mountWithPlugins(HealthStatus);
     await vi.waitFor(async () => {
       await flushPromises();
       expect(wrapper.text()).toContain('Backend status: ok');
@@ -27,7 +23,7 @@ describe('HealthStatus', () => {
   it('explains what to do without a backend', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
 
-    const wrapper = mountWithQuery();
+    const wrapper = mountWithPlugins(HealthStatus);
     await vi.waitFor(async () => {
       await flushPromises();
       expect(wrapper.text()).toContain('No backend answered');
