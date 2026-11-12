@@ -3,6 +3,18 @@
 /* Dark mode follows the "dark" class on <html>, set by the theme store */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Self hosted font: put the .woff2 files in src/assets/fonts, uncomment this block and drop "Inter" below if unused.
+ * Vite resolves the relative url, adds a hash to the file name and copies it into the build.
+ *
+ * @font-face {
+ *   font-family: "Inter";
+ *   src: url("../assets/fonts/inter-variable.woff2") format("woff2");
+ *   font-weight: 100 900;
+ *   font-display: swap;
+ * }
+ */
+
 /* Design tokens: every --color-* becomes a utility like bg-brand-600 or text-brand-500 */
 @theme {
   --color-brand-50: oklch(0.96 0.03 275);
