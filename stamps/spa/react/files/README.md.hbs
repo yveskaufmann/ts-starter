@@ -23,6 +23,7 @@ npm run check       # format, lint (biome) and type check
 ```
 src/
   main.tsx             entry point: providers and router
+  providers.tsx        app wide providers (AppProviders)
   router.tsx           the router, uses the routes in src/routes
   routes/              one file per page (file based routing)
     __root.tsx         layout of all pages, the 404 page
@@ -34,7 +35,8 @@ src/
   components/
     ui/                small reusable building blocks (Button, Card)
     layout/            the frame of the pages: header, navigation, footer
-  features/<feature>/  everything of one topic: api/, components/, stores/
+  features/<feature>/  everything of one topic: api/, components/, hooks/, stores/
+  hooks/               shared React hooks
   lib/api-client.ts    fetch wrapper for the backend API
   lib/query-client.ts  TanStack Query settings
   stores/              global client state (Zustand), e.g. the theme
