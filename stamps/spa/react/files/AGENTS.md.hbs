@@ -1,0 +1,80 @@
+# AGENTS.md
+
+{{name}}: a React single page app (SPA). `npm run build` turns it into static files (`index.html` plus JS and CSS in
+`dist/`) that a separate backend serves. There is no server code in this repository, the backend API is reached under
+`/api`.
+
+Stack: Vite, React, TypeScript, TanStack Router (file based routing), TanStack Query (server data), Zustand (client
+state), Tailwind CSS v4, Vitest with Testing Library, Biome.
+
+## Commands
+
+```bash
+npm install
+npm run dev          # dev server on http://localhost:5173 with hot reload
+npm run build        # type check (tsc) and production build into dist/
+npm test             # all unit and component tests once
+npm run test:watch   # tests in watch mode
+npm run typecheck    # tsc only
+npm run check        # biome format + lint with fixes, then tsc
+```
+
+Before you finish a change, `npm run check` and `npm test` must pass.
+
+## Where things are
+
+```
+src/
+  main.tsx              entry point, mounts the providers and the router
+  router.tsx            creates the router from routeTree.gen.ts
+  routes/               pages, one file per URL (file based routing)
+  routeTree.gen.ts      GENERATED from src/routes, never edit it
+  features/<feature>/   one vertical slice per topic, see below
+  components/ui/        shared, generic building blocks (Button, Card), no feature logic
+  components/layout/    the app frame: header, navigation, footer, 404
+  lib/                  shared infrastructure: api-client.ts (fetch wrapper), query-client.ts
+  stores/               global client state used by many features (theme)
+  assets/images|fonts/  images and fonts imported by code or CSS
+  styles/app.css        Tailwind entry, design tokens in @theme
+  test/                 test setup and render helpers
+  config.ts             constants that are the same in every environment
+public/                 files served as they are under a fixed URL (favicon, robots.txt)
+```
+
+## Features (vertical slices)
+
+Everything that belongs to one topic lives in `src/features/<feature>/`, so a feature can be understood, changed and
+deleted in one place:
+
+```
+features/<feature>/
+  api/          queryOptions, useQuery/useMutation hooks and the request functions (via lib/api-client)
+  components/   components of this feature, with their *.spec.tsx next to them
+  stores/       Zustand stores only this feature uses
+  types.ts      types of this feature (optional)
+```
+
+- Only create the subfolders a feature needs.
+- A feature may import from `components/`, `lib/`, `stores/` and `config.ts`, but not from another feature. If two
+  features need the same code, move it to `components/` or `lib/`.
+- Routes stay thin: a file in `src/routes` reads params, loads data in its `loader` and renders feature components.
+
+## How to add things
+
+- **Page:** add a file in `src/routes`, e.g. `src/routes/orders/$orderId.tsx` for `/orders/:orderId`, export
+  `Route = createFileRoute('/orders/$orderId')(...)`. Run `npm run dev` or `npm run build` once to regenerate
+  `routeTree.gen.ts`. Files starting with `-` in `src/routes` are not routes.
+- **API call:** add `features/<feature>/api/<name>.ts` with `queryOptions` and a hook, using `api.get/post/...` from
+  `@/lib/api-client`. Paths are relative to `/api`. See `features/health/api/get-health.ts`.
+- **Server data** always goes through TanStack Query, never into a Zustand store.
+- **Client state** (UI state, drafts): a Zustand store in the feature, or in `src/stores` if it is global.
+- **Shared component:** `src/components/ui`, styled with Tailwind classes, no data fetching.
+- **Styling:** Tailwind utility classes in the markup; new colors or fonts as tokens in `@theme` in `styles/app.css`.
+
+## Conventions
+
+- Imports use the `@/` alias for `src/`.
+- File names are kebab-case (`health-status.tsx`), components PascalCase (`HealthStatus`).
+- Tests are `*.spec.ts(x)` next to the code. Use `renderWithProviders` and `renderRoute` from `src/test/render.tsx`,
+  stub `fetch` instead of calling a backend, find elements by role or text.
+- Environment settings are in `.env.example` (copy to `.env.local`). Only `VITE_*` variables reach the browser.
