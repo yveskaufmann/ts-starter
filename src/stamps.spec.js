@@ -66,6 +66,7 @@ describe('shipped stamps', () => {
       'editorconfig:go',
       'editorconfig:ts',
       'gitignore:node',
+      'gitignore:web',
       'spa:react',
       'vitest:ts',
     ]);
@@ -128,7 +129,7 @@ describe('shipped stamps', () => {
       'editorconfig:ts',
       'vitest:ts',
       'biome:ts',
-      'gitignore:node',
+      'gitignore:web',
       `spa:${variant}`,
     ]);
     for (const section of DEPENDENCY_SECTIONS) {

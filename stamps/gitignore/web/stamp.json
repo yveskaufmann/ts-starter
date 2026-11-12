@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../stamp.schema.json",
+  "description": ".gitignore for web frontends built with Vite (node_modules, build output, local env files)",
+  "mode": "inject"
+}
